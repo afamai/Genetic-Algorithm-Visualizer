@@ -10,3 +10,10 @@ function singlePointCrossover(parent1, parent2) {
     let index = Math.floor(Math.random() * parent1.length);
     return parent1.slice(0, index).concat(parent2.slice(index));
 }
+
+
+function rankSelection(population, amount) {
+    population.sort(function(a, b) {
+        return (a.score > b.score) ? 1 : -1;
+    })
+}
