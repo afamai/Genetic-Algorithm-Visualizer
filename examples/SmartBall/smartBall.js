@@ -66,25 +66,30 @@ window.onload = function() {
         engine: engine
     });
 
+    // init collision filters
+    var defaultCategory = 0x0001;
+    var ballCategory = 0x0002;
+
     var population = [];
     // generate the population 
     for (var i = 0; i < 50; i++) {
-        let body = Bodies.circle(400, 560, 5, { inertia: Infinity, collisionFilter: { category: 0x0001, mask: 0x0002 }});
+        let body = Bodies.circle(400, 560, 5, { inertia: Infinity, collisionFilter: { category: ballCategory, mask: defaultCategory }});
         let ball = new Ball(body);
         population.push(ball);
         World.add(engine.world, body);
     }
 
-    var settings = { isStatic: true, collisionFilter: { category: 0x0002 }, friction: 0 };
+    var params = { isStatic: true, collisionFilter: { category: defaultCategory } };
     World.add(engine.world, [
         // walls
-        Bodies.rectangle(400, -26, 800, 50, settings),
-        Bodies.rectangle(400, 626, 800, 50, settings),
-        Bodies.rectangle(826, 300, 50, 600, settings),
-        Bodies.rectangle(-26, 300, 50, 600, settings)
+        Bodies.rectangle(400, -26, 800, 50, params),
+        Bodies.rectangle(400, 626, 800, 50, params),
+        Bodies.rectangle(826, 300, 50, 600, params),
+        Bodies.rectangle(-26, 300, 50, 600, params)
     ]);
 
-    var target = Bodies.circle(200, 400, 10, settings);
+    // add target
+    var target = Bodies.circle(200, 400, 10, params);
     World.add(engine.world, target);
 
     // main engine update loop
@@ -102,10 +107,11 @@ window.onload = function() {
         });
     });
 
+    // collision handling
     Events.on(engine, "collisionEnd", function(event) {
         var pairs = event.pairs.slice();
         pairs.forEach(function(pair) {
-            if (pair.bodyA.collisionFilter.category == 1 && pair.bodyB == target) {
+            if (pair.bodyA.collisionFilter.category == ballCategory && pair.bodyB == target) {
                 World.remove(engine.world, pair.bodyA);
                 pair.bodyA.ball.distance = 0;
                 pair.bodyA.ball.done = true;
