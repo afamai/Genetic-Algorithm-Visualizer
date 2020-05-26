@@ -14,9 +14,10 @@ function Jump() {
 
 function Ball(body) {
     this.body = body;
+    this.body.ball = this;
     this.done = false;
     this.counter = 0;
-    this.fitness = Infinity;
+    this.distance = Infinity;
     this.jumps = [];
     // initialize jump genome
     for(var i = 0; i < 15; i++) {
@@ -40,6 +41,12 @@ function Ball(body) {
             }
         }
     }
+}
+
+function distance(bodyA, bodyB) {
+    let posA = bodyA.position;
+    let posB = bodyB.position;
+    return Math.sqrt((posA.x - posB.x)**2 + (posA.y - posB.y)**2);
 }
 
 window.onload = function() {
@@ -86,6 +93,10 @@ window.onload = function() {
         population.forEach(function(ball) {
             if (!ball.done) {
                 ball.update();
+                let dist = distance(ball.body, target);
+                if (dist < ball.distance) {
+                    ball.distance = dist;
+                }
                 generationEnd = false;
             }
         });
@@ -96,6 +107,9 @@ window.onload = function() {
         pairs.forEach(function(pair) {
             if (pair.bodyA.collisionFilter.category == 1 && pair.bodyB == target) {
                 World.remove(engine.world, pair.bodyA);
+                pair.bodyA.ball.distance = 0;
+                pair.bodyA.ball.done = true;
+                console.log(pair.bodyA);
             }
         })
     })
