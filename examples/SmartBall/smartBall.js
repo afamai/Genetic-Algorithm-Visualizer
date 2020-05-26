@@ -16,9 +16,10 @@ function Ball(body) {
     this.body = body;
     this.done = false;
     this.counter = 0;
+    this.fitness = Infinity;
     this.jumps = [];
     // initialize jump genome
-    for(var i = 0; i < 20; i++) {
+    for(var i = 0; i < 15; i++) {
         this.jumps.push(new Jump());
     }
 
@@ -30,7 +31,7 @@ function Ball(body) {
     this.update = function() {
         //console.log(this.counter);
         if(!this.isMoving()) {
-            if (this.counter < 20) {
+            if (this.counter < 15) {
                 let jump = this.jumps[this.counter++];
                 this.body.force = {x: jump.x, y: jump.y};
             } 
@@ -40,7 +41,6 @@ function Ball(body) {
         }
     }
 }
-
 
 window.onload = function() {
     // module aliases
@@ -71,19 +71,34 @@ window.onload = function() {
     var settings = { isStatic: true, collisionFilter: { category: 0x0002 }, friction: 0 };
     World.add(engine.world, [
         // walls
-        Bodies.rectangle(400, 0, 800, 50, settings),
-        Bodies.rectangle(400, 600, 800, 50, settings),
-        Bodies.rectangle(800, 300, 50, 600, settings),
-        Bodies.rectangle(0, 300, 50, 600, settings)
+        Bodies.rectangle(400, -26, 800, 50, settings),
+        Bodies.rectangle(400, 626, 800, 50, settings),
+        Bodies.rectangle(826, 300, 50, 600, settings),
+        Bodies.rectangle(-26, 300, 50, 600, settings)
     ]);
 
+    var target = Bodies.circle(200, 400, 10, settings);
+    World.add(engine.world, target);
 
-    //main engine update loop
+    // main engine update loop
     Events.on(engine, "afterUpdate", function(event) {
+        let generationEnd = true;
         population.forEach(function(ball) {
-            ball.update();
-        }) 
+            if (!ball.done) {
+                ball.update();
+                generationEnd = false;
+            }
+        });
     });
+
+    Events.on(engine, "collisionEnd", function(event) {
+        var pairs = event.pairs.slice();
+        pairs.forEach(function(pair) {
+            if (pair.bodyA.collisionFilter.category == 1 && pair.bodyB == target) {
+                World.remove(engine.world, pair.bodyA);
+            }
+        })
+    })
 
     // run the engine
     Engine.run(engine);
