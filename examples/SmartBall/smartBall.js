@@ -3,7 +3,7 @@ function Jump() {
     this.y = 0;
 
     this.randomize = function() {
-        let power = Math.random() * 0.005;
+        let power = Math.random() * 0.006;
         let angle = Math.random() * Math.PI + Math.PI;
         this.x = Math.cos(angle) * power;
         this.y = Math.sin(angle) * power;
@@ -22,7 +22,7 @@ function Ball(body) {
     this.jumps = [];
 
     // initialize genome/jumps
-    for(var i = 0; i < 15; i++) {
+    for(var i = 0; i < 25; i++) {
         this.jumps.push(new Jump());
     }
 
@@ -43,9 +43,8 @@ function Ball(body) {
 
     // update
     this.update = function() {
-        //console.log(this.counter);
         if(!this.isMoving()) {
-            if (this.counter < 5) {
+            if (this.counter < 25) {
                 let jump = this.jumps[this.counter++];
                 this.body.force = {x: jump.x, y: jump.y};
             } 
@@ -75,7 +74,6 @@ function runGeneration(population, engine, target) {
         requestAnimationFrame(function() { runGeneration(population, engine, target); });
     }
     else {
-        console.log(population, engine, target);
         newGeneration(population);
         population.forEach(function(ball) {
             ball.reset();
@@ -92,7 +90,7 @@ function newGeneration(population) {
     var genomes = [];
     parents.forEach(function(pair) {
         let jumps = singlePointCrossover(pair.parentA.jumps, pair.parentB.jumps, 0.8);
-        randomResetting(jumps, 0.3);
+        randomResetting(jumps, 0.4);
         console.log(jumps);
         genomes.push(jumps);
     });
@@ -121,7 +119,7 @@ window.onload = function() {
 
     // create a renderer
     var render = Render.create({
-        element: document.body,
+        canvas: $("canvas")[0],
         engine: engine
     });
 
