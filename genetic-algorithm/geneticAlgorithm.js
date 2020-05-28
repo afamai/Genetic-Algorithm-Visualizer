@@ -43,6 +43,7 @@ function rouletteWheelSelection(population, amount) {
         var parent1 = spinWheel(wheel);
 
         // pick the second parent, and ensure that it is different from the first parent
+        // NOTE: bad implementation, better solution is to do the crossover check here to avoid unnecessary loops
         do {
             parent2 = spinWheel(wheel);
             unique = parent1 != parent2;

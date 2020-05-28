@@ -17,15 +17,20 @@ function Ball(body) {
     this.body.ball = this;
     this.done = false;
     this.counter = 0;
-    this.distance = Infinity;
+    this.distanceToTarget = Infinity;
     this.jumps = [];
-    // initialize jump genome
+
+    // initialize genome/jumps
     for(var i = 0; i < 15; i++) {
         this.jumps.push(new Jump());
     }
 
     this.isMoving = function() {
         return Math.round(this.body.speed) != 0 || Math.round(this.body.angularVelocity) != 0;
+    }
+
+    this.getFitness = function() {
+        return 1 / 1 + this.distanceToTarget;
     }
 
     // update
@@ -41,6 +46,33 @@ function Ball(body) {
             }
         }
     }
+}
+
+function runGeneration(population, engine, target) {
+    Matter.Engine.update(engine);
+
+    let generationEnd = true;
+    population.forEach(function(ball) {
+        if (!ball.done) {
+            ball.update();
+            let dist = distance(ball.body, target);
+            if (dist < ball.distanceToTarget) {
+                ball.distanceToTarget = dist;
+            }
+            generationEnd = false;
+        }
+    });
+
+    if (!generationEnd) {
+        requestAnimationFrame(function() { runGeneration(population, engine, target); });
+    }
+    else {
+        console.log(population, engine, target);
+    }
+}
+
+function newGeneration(population) {
+
 }
 
 function distance(bodyA, bodyB) {
@@ -70,10 +102,11 @@ window.onload = function() {
     var defaultCategory = 0x0001;
     var ballCategory = 0x0002;
 
+    var size = 50;
     var population = [];
     // generate the population 
-    for (var i = 0; i < 50; i++) {
-        let body = Bodies.circle(400, 560, 5, { inertia: Infinity, collisionFilter: { category: ballCategory, mask: defaultCategory }});
+    for (var i = 0; i < size; i++) {
+        let body = Bodies.circle(400, 560, 5, { collisionFilter: { category: ballCategory, mask: defaultCategory }});
         let ball = new Ball(body);
         population.push(ball);
         World.add(engine.world, body);
@@ -82,30 +115,40 @@ window.onload = function() {
     var params = { isStatic: true, collisionFilter: { category: defaultCategory } };
     World.add(engine.world, [
         // walls
-        Bodies.rectangle(400, -26, 800, 50, params),
-        Bodies.rectangle(400, 626, 800, 50, params),
-        Bodies.rectangle(826, 300, 50, 600, params),
-        Bodies.rectangle(-26, 300, 50, 600, params)
+        Bodies.rectangle(400, -20, 800, 50, params),
+        Bodies.rectangle(400, 620, 800, 50, params),
+        Bodies.rectangle(820, 300, 50, 600, params),
+        Bodies.rectangle(-20, 300, 50, 600, params)
     ]);
-
     // add target
     var target = Bodies.circle(200, 400, 10, params);
     World.add(engine.world, target);
 
+    
+    //id = setInterval(function() { runGeneration(population, engine, target); }, 1000/60);
     // main engine update loop
-    Events.on(engine, "afterUpdate", function(event) {
-        let generationEnd = true;
-        population.forEach(function(ball) {
-            if (!ball.done) {
-                ball.update();
-                let dist = distance(ball.body, target);
-                if (dist < ball.distance) {
-                    ball.distance = dist;
-                }
-                generationEnd = false;
-            }
-        });
-    });
+    // Events.on(engine, "afterUpdate", function(event) {
+    //     let generationEnd = true;
+    //     population.forEach(function(ball) {
+    //         if (!ball.done) {
+    //             ball.update();
+    //             let dist = distance(ball.body, target);
+    //             if (dist < ball.distanceToTarget) {
+    //                 ball.distanceToTarget = dist;
+    //             }
+    //             generationEnd = false;
+    //         }
+    //     });
+
+    //     if (generationEnd) {
+            
+    //         population.forEach(function(ball) {
+    //             World.remove(engine.world, ball.body);
+    //         });
+
+    //         var parents = rouletteWheelSelection(population, size);
+    //     }
+    // });
 
     // collision handling
     Events.on(engine, "collisionEnd", function(event) {
@@ -113,15 +156,16 @@ window.onload = function() {
         pairs.forEach(function(pair) {
             if (pair.bodyA.collisionFilter.category == ballCategory && pair.bodyB == target) {
                 World.remove(engine.world, pair.bodyA);
-                pair.bodyA.ball.distance = 0;
+                pair.bodyA.ball.distanceToTarget = 0;
                 pair.bodyA.ball.done = true;
-                console.log(pair.bodyA);
             }
         })
     })
 
+    
     // run the engine
-    Engine.run(engine);
+    // Engine.run(engine);
+    runGeneration(population, engine, target);
 
     // run the renderer
     Render.run(render);
