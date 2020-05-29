@@ -83,7 +83,7 @@ function init() {
    var defaultCategory = 0x0001;
    var ballCategory = 0x0002;
 
-   var size = 100;
+   var size = 500;
    var population = [];
    // generate the population 
    for (var i = 0; i < size; i++) {
@@ -214,6 +214,63 @@ function distance(bodyA, bodyB) {
     return Math.sqrt((posA.x - posB.x)**2 + (posA.y - posB.y)**2);
 }
 
+function validation() {
+    let valid = true
+    let populationSize = parseInt($("#population").val());
+    let crossoverRate = parseFloat($("#crossover-rate").val());
+    let mutationRate = parseFloat($("#mutation-rate").val());
+
+    console.log(crossoverRate);
+    console.log(mutationRate);
+
+    // population size validation
+    if (isNaN(populationSize)) {
+        $("#population-error").text("Must be a valid number");
+        $("#population").addClass("is-invalid");
+        valid = false;
+    } 
+    else if (populationSize < 1 || populationSize > 500){
+        $("#population-error").text("Population size must be between 1 - 500");
+        $("#population").addClass("is-invalid");
+        valid = false
+    }
+    else {
+        $("#population").removeClass("is-invalid");
+    }
+
+    // crossover rate validation
+    if (isNaN(crossoverRate)) {
+        $("#crossover-rate-error").text("Must be a valid number");
+        $("#crossover-rate").addClass("is-invalid");
+        valid = false;
+    } 
+    else if (crossoverRate < 0 || crossoverRate > 1){
+        console.log(crossoverRate)
+        $("#crossover-rate-error").text("Crossover rate must be between 0.0 - 1.0");
+        $("#crossover-rate").addClass("is-invalid");
+        valid = false
+    }
+    else {
+        $("#crossover-rate").removeClass("is-invalid");
+    }
+
+    // mutation rate validation
+    if (isNaN(mutationRate)) {
+        $("#mutation-rate-error").text("Must be a valid number");
+        $("#mutation-rate").addClass("is-invalid");
+        valid = false;
+    } 
+    else if (mutationRate < 0.0 || mutationRate > 1.0){
+        $("#mutation-rate-error").text("Mutation rate must be between 0.0 - 1.0");
+        $("#mutation-rate").addClass("is-invalid");
+        valid = false
+    }
+    else {
+        $("#mutation-rate").removeClass("is-invalid");
+    }  
+    return valid;
+}
+
 window.onload = function() {
     var instance = init();
     
@@ -224,6 +281,31 @@ window.onload = function() {
     $("#crossover-rate").val(instance.crossoverRate);
     $("#mutation-method").val(instance.mutationMethod);
     $("#mutation-rate").val(instance.mutationRate);
+
+    $("#apply,#restart").click(function() {
+        let valid = validation();
+        if (valid) {
+            instance.size = $("#population").val();
+            instance.selectionMethod = $("#selection-method").val();
+            instance.crossoverMethod = $("#crossover-method").val();
+            instance.crossoverRate = $("#crossover-rate").val();
+            instance.mutationMethod = $("#mutation-method").val();
+            instance.mutationRate = $("#mutation-rate").val();
+            console.log(instance);
+            $("#alert").show().removeClass();
+            $("#alert").addClass("alert alert-success").text("Successfully applied settings");
+            $("#alert").fadeOut(2000);
+
+            if($(this).attr("id") == "restart") {
+                console.log("restart");
+            }
+        } 
+        else {
+            $("#alert").show().removeClass();
+            $("#alert").addClass("alert alert-danger").text("Failed to apply settings");
+            $("#alert").fadeOut(2000);
+        }
+    });
 
     $("#play").click(function() {
         instance.pause = false;
