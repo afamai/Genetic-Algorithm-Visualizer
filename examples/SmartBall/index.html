@@ -15,10 +15,10 @@
             </nav>
         </header>
         <main>
-            <div class="container">
+            <div class="container-xl">
                 <h2 class="mt-4 mb-3">Smart Ball</h2>
                 <div class="row">
-                    <div class="col" style="background:lightgray;">
+                    <div class="col text-center" style="background:lightgray;">
                         <canvas id="test" width=800 height=600></canvas>
                     </div>
                     <div class="pt-2 col" style="background:gray;">
@@ -31,9 +31,35 @@
                                 <p id="speed" class="mb-0">x1</p>
                             </div>
                             <h5>Algorithm Parameters</h5>
-                            <div class="row mb-3">
-                                <label for="population">Population Size: </label>
-                                <input type="number" id="population">
+                            <div class="form-group form-row">
+                                <label for="population" class="col">Population Size:</label>
+                                <input type="number" id="population" class="col form-control form-control-sm">
+                            </div>
+                            <div class="form-group form-row">
+                                <label for="selection-method" class="col">Selection Method:</label>
+                                <select id="selection-method" class="col form-control form-control-sm">
+                                    <option value="rouletteWheel">Roulette Wheel Selection</option>
+                                </select>
+                            </div>
+                            <div class="form-group form-row">
+                                <label for="mutation-method" class="col">Mutation Method:</label>
+                                <select id="mutation-method" class="col form-control form-control-sm">
+                                    <option value="randomResetting">Random Resetting</option>
+                                </select>
+                            </div>
+                            <div class="form-group form-row">
+                                <label for="mutation-rate" class="col">Mutation Rate:</label>
+                                <input type="number" id="mutation-rate" class="col form-control form-control-sm">
+                            </div>
+                            <div class="form-group form-row">
+                                <label for="crossover-method" class="col">Crossover Method:</label>
+                                <select id="crossover-method" class="col form-control form-control-sm">
+                                    <option value="singlePointCrossover">Single Point Crossover</option>
+                                </select>
+                            </div>
+                            <div class="form-group form-row">
+                                <label for="crossover-rate" class="col">Crossover Rate:</label>
+                                <input type="number" id="crossover-rate" class="col form-control form-control-sm">
                             </div>
                         </form>
                     </div>
