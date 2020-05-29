@@ -231,6 +231,7 @@ window.onload = function() {
         else {
             instance.speed *= 2;
         }
+        $("#speed").text("x" + instance.speed);
     });
 
 }
