@@ -211,14 +211,16 @@ window.onload = function() {
     runGeneration(instance);
 
     $("#play").click(function() {
-        console.log(instance);
         instance.pause = false;
         runGeneration(instance);
+        $(this).addClass("disabled").prop( "disabled", true);
+        $("#pause").removeClass("disabled").prop( "disabled", false);
     });
 
     $("#pause").click(function() {
-        console.log(instance);
         instance.pause = true;
+        $(this).addClass("disabled").prop( "disabled", true);
+        $("#play").removeClass("disabled").prop( "disabled", false);
     })
 
     $("#fast-forward").click(function() {
