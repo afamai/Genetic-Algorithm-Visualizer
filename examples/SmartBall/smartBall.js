@@ -130,14 +130,23 @@ function init() {
    // run the renderer
    Render.run(render);
 
-   return {
-       population: population,
-       engine: engine,
-       target: target,
-       generation: 0,
-       counter: 1,
-       speed: 1
-    };
+   // initialize instance object
+   var instance = {
+        population: population,
+        engine: engine,
+        target: target,
+        generation: 0,
+        counter: 1,
+        speed: 1,
+        size: size,
+        selectionMethod: "rouletteWheelSelection",
+        crossoverMethod: "singlePointCrossover",
+        crossoverRate: 0.8,
+        mutationMethod: "randomResetting",
+        mutationRate: 0.1
+    }
+
+   return instance;
 }
 
 function runGeneration(instance) {
@@ -207,8 +216,14 @@ function distance(bodyA, bodyB) {
 
 window.onload = function() {
     var instance = init();
-    // run the engine
-    runGeneration(instance);
+    
+    // initialize the ui
+    $("#population").val(instance.size);
+    $("#selection-method").val(instance.selectionMethod);
+    $("#crossover-method").val(instance.crossoverMethod);
+    $("#crossover-rate").val(instance.crossoverRate);
+    $("#mutation-method").val(instance.mutationMethod);
+    $("#mutation-rate").val(instance.mutationRate);
 
     $("#play").click(function() {
         instance.pause = false;
