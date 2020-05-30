@@ -87,7 +87,7 @@ function init() {
    var population = [];
    // generate the population 
    for (var i = 0; i < size; i++) {
-       let ball = new Ball(400, 565, 8, { inertia: Infinity, collisionFilter: { category: ballCategory, mask: defaultCategory }});
+       let ball = new Ball(400, 582, 8, { inertia: Infinity, collisionFilter: { category: ballCategory, mask: defaultCategory }});
 
        population.push(ball);
        World.add(engine.world, ball.body);
