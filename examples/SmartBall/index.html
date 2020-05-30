@@ -5,7 +5,9 @@
         <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
         <script src="../../libraries/matter.js"></script>
+        <script src="../../libraries/Chart.js"></script>
         <script src="../../genetic-algorithm/geneticAlgorithm.js"></script>
+        <script src="../statistics.js"></script>
         <script src="./smartBall.js"></script>        
     </head>
     <body class="d-flex flex-column h-100">
@@ -18,10 +20,10 @@
             <div class="container">
                 <h2 class="mt-4 mb-3">Smart Ball</h2>
                 <div class="row">
-                    <div class="col text-center" style="background:lightgray;">
+                    <div class="col text-center">
                         <canvas id="test" width=800 height=600></canvas>
                     </div>
-                    <div class="pt-2 col" style="background:gray;">
+                    <div class="pt-2 col">
                         <form>
                             <h5>Play Settings</h5>
                             <div class="row mb-3">
@@ -74,6 +76,9 @@
                 </div>
                 <div id="statistics">
                     <div id="current-stat"></div>
+                    <div>
+                        <canvas id="chart" width="600" height="400"></canvas>
+                    </div>
                 </div>
             </div>
         </main>

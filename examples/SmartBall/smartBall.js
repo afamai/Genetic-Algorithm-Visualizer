@@ -83,7 +83,7 @@ function init() {
    var defaultCategory = 0x0001;
    var ballCategory = 0x0002;
 
-   var size = 500;
+   var size = 200;
    var population = [];
    // generate the population 
    for (var i = 0; i < size; i++) {
@@ -182,6 +182,7 @@ function runGeneration(instance) {
         }
     }
     else {
+        updateStatistics(population, ++instance.generation);
         newGeneration(population);
         population.forEach(function(ball) {
             ball.reset();
@@ -271,7 +272,7 @@ function validation() {
     return valid;
 }
 
-window.onload = function() {
+$(document).ready(function() {
     var instance = init();
     
     // initialize the ui
@@ -331,4 +332,4 @@ window.onload = function() {
         $("#speed").text("x" + instance.speed);
     });
 
-}
+});
