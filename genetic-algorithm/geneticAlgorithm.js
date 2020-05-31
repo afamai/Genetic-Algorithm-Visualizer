@@ -58,3 +58,33 @@ function rouletteWheelSelection(population, amount) {
 
     return parents;
 }
+
+function Test(n) {
+    this.a = n;
+    this.getFitness = function() {
+        return this.a;
+    }
+}
+
+var x = [new Test(7.5), new Test(1), new Test(1), new Test(0.5)];
+
+function SUS(population, amount) {
+    let totalFitness = population.reduce((acc, cv) => acc + cv.getFitness(), 0);
+    let delta = totalFitness / amount;
+    let point = Math.random() * delta;
+    let selection = [];
+    
+    let sum = population[0].getFitness();
+    for (var i = 0; i < amount; i++) {
+        for (var j = 1; j < population.length; j++) {
+            if (point < sum) {
+                selection.push(population[j-1]);
+                point += delta;
+                break;
+            }
+            sum += population[i].getFitness();
+        }
+    }
+
+    return selection;
+}
