@@ -22,41 +22,21 @@ function rankSelection(population, amount) {
     return population.slice(0, amount);
 }
 
-function spinWheel(wheel) {
-    let totalFitness = wheel.reduce((a, b) => a + b, 0);
-    // generate random float to simulate the wheel spinning
-    let num = Math.random() * totalFitness;
-    let temp = 0;
-    for(var i = 0; i < wheel.length; i++) {
-        temp += wheel[i];
-        if (temp > num) {
-            return i;
+function RWS(population, amount) {
+    let totalFitness = population.reduce((acc, cv) => acc + cv.getFitness(), 0);
+    let selection = [];
+    for (var i = 0; i < amount; i++) {
+        let point = Math.random() * totalFitness;
+        let sum = 0
+        for (var j = 0; j < population.length; j++) {
+            sum += population[j].getFitness();
+            if (point < sum) {
+                selection.push(population[j]);
+                break;
+            }
         }
-    };
-}
-
-function rouletteWheelSelection(population, amount) {
-    // generate the wheel
-    var wheel = population.map((genome) => genome.getFitness());
-
-    // generate a list of parent pairs, where which pair will be used to produce 1 offspring
-    var parents = [];
-    for(var i = 0; i < amount; i++) {
-        // pick the first parent
-        var parent1 = spinWheel(wheel);
-
-        // pick the second parent, and ensure that it is different from the first parent
-        // NOTE: bad implementation, better solution is to do the crossover check here to avoid unnecessary loops
-        do {
-            parent2 = spinWheel(wheel);
-            unique = parent1 != parent2;
-        } while(!unique);
-
-        // add pair
-        parents.push({parentA: population[parent1], parentB: population[parent2]});
     }
-
-    return parents;
+    return selection;
 }
 
 function Test(n) {
