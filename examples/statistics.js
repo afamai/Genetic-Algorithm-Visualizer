@@ -40,8 +40,8 @@ function updateStatistics(population, generation) {
 
     let averageFitness = totalFitness / population.length;
 
-    console.log(generation, bestFitness, averageFitness);
-
+    // update the text for current generation
+    $("#current-stat").html("Generation: " + generation + "<br>Best Fitness: " + bestFitness + "<br>Average Fitness: " + averageFitness);
     // update the label if current generation is greater than the chart labels
     if (config.data.labels.slice(-1) < generation){
         config.data.labels.push(generation);
@@ -68,6 +68,7 @@ function updateStatistics(population, generation) {
         }) 
     }
     else {
+        // append the data to the current run
         currentRunBest = datasets[datasets.length - 2];
         currentRunAverage = datasets[datasets.length - 1];
         currentRunBest.data.push(bestFitness);
