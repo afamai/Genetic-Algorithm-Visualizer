@@ -6,7 +6,8 @@ function randomResetting(genome, mutationRate) {
     })
 }
 
-function singlePointCrossover(parent1, parent2, crossoverRate) {
+// single point crossover
+function SPC(parent1, parent2, crossoverRate) {
     if (Math.random() < crossoverRate) {        
         let index = Math.floor(Math.random() * parent1.length);
         return parent1.slice(0, index).concat(parent2.slice(index));
@@ -14,12 +15,14 @@ function singlePointCrossover(parent1, parent2, crossoverRate) {
     return parent1;
 }
 
-// generate a list of parents for producing off-springs
-function rankSelection(population, amount) {
-    population.sort(function(a, b) {
-        return (a.fitness > b.fitness) ? 1 : -1;
-    })
-    return population.slice(0, amount);
+// two point crossover
+function TPC(parent1, parent2, crossoverRate) {
+    if (Math.random() < crossoverRate) {
+        let len = parent1.length;
+        let index1 = Math.floor(Math.random() * len);
+        let index2 = Math.floor(Math.random() * (len - index1 - 1) + index1);
+        return parent1.slice(0, index1).concat(parent2.slice(index1, index2)).concat(parent1.slice(index2));
+    }
 }
 
 function TOS(population, amount, k) {
@@ -48,18 +51,6 @@ function RWS(population, amount) {
         }
     }
     return selection;
-}
-
-function Test(n) {
-    this.a = n;
-    this.getFitness = function() {
-        return this.a;
-    }
-}
-
-var x = [];
-for (var i = 0; i < 10; i++) {
-    x.push(new Test(Math.floor(Math.random() * 100)));
 }
 
 function SUS(population, amount) {
