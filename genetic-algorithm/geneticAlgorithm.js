@@ -22,6 +22,17 @@ function rankSelection(population, amount) {
     return population.slice(0, amount);
 }
 
+function TOS(population, amount, k) {
+    let selection = [];
+    for (var i = 0; i < amount; i++) {
+        // shuffle the population
+        let shuffle = population.sort(() => 0.5 - Math.random());
+        // select the best individual
+        selection.push(shuffle.slice(0, k).sort((a, b) => a.getFitness() > b.getFitness() ? -1 : 1)[0]);
+    }
+    return selection;
+}
+
 function RWS(population, amount) {
     let totalFitness = population.reduce((acc, cv) => acc + cv.getFitness(), 0);
     let selection = [];
@@ -46,7 +57,10 @@ function Test(n) {
     }
 }
 
-var x = [new Test(7.5), new Test(1), new Test(1), new Test(0.5)];
+var x = [];
+for (var i = 0; i < 10; i++) {
+    x.push(new Test(Math.floor(Math.random() * 100)));
+}
 
 function SUS(population, amount) {
     let totalFitness = population.reduce((acc, cv) => acc + cv.getFitness(), 0);
