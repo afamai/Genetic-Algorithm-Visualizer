@@ -7,6 +7,18 @@ function randomResetting(genome, mutationRate) {
     })
 }
 
+// swap mutation
+function swapMutation(genome, mutationRate) {
+    if (Math.random() < mutationRate) {
+        let index1 = Math.floor(Math.random() * genome.length);
+        let index2 = Math.floor(Math.random() * genome.length);
+
+        let temp = genome[index1];
+        genome[index1] = genome[index2];
+        genome[index2] = temp;
+    }
+}
+
 // single point crossover
 function SPC(parent1, parent2, crossoverRate) {
     if (Math.random() < crossoverRate) {        

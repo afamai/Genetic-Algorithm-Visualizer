@@ -228,9 +228,6 @@ function newGeneration(instance) {
         genomes.push(offspring);
     }
 
-    console.log(population.length);
-    console.log(instance.size);
-
     if (population.length < instance.size) {
         population.forEach(function(ball, idx) {
             ball.jumps = genomes[idx];
