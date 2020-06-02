@@ -139,8 +139,8 @@ function init() {
         counter: 1,
         speed: 1,
         size: size,
-        selectionMethod: "rouletteWheelSelection",
-        crossoverMethod: "singlePointCrossover",
+        selectionMethod: "RWS",
+        crossoverMethod: "SPC",
         crossoverRate: 0.8,
         mutationMethod: "randomResetting",
         mutationRate: 0.1
@@ -183,30 +183,83 @@ function runGeneration(instance) {
     }
     else {
         updateStatistics(population, ++instance.generation);
-        newGeneration(population);
-        population.forEach(function(ball) {
-            ball.reset();
-        });
+        newGeneration(instance);
         requestAnimationFrame(function() { runGeneration(instance); });
     }
 }
 
-function newGeneration(population) {
+function newGeneration(instance) {
     // get parents
-    console.log("get parents");
-    var parents = rouletteWheelSelection(population, population.length);
+    let population = instance.population;
+    let selectionMethod = instance.selectionMethod;
+    let mutationMethod = instance.mutationMethod;
+    let mutationRate = instance.mutationRate;
+    let crossoverMethod = instance.crossoverMethod;
+    let crossoverRate = instance.crossoverRate;
 
-    console.log("produce offsprings")
-    var genomes = [];
-    parents.forEach(function(pair) {
-        let jumps = singlePointCrossover(pair.parentA.jumps, pair.parentB.jumps, 0.8);
-        randomResetting(jumps, 0.01);
-        genomes.push(jumps);
-    });
-    console.log("done production")
-    population.forEach(function(ball, index) {
-        ball.jumps = genomes[index];
-    });
+    let genomes = [];
+    for (var i = 0; i < instance.size; i++) {
+        let parents = [];
+        switch (selectionMethod) {
+            case "RWS":
+                parents = RWS(population, 2);
+                break;
+            case "SUS":
+                parents = SUS(population, 2);
+                break;
+        }
+
+        let offspring = null;
+        switch (crossoverMethod) {
+            case "SPC":
+                offspring = SPC(parents[0].jumps, parents[1].jumps, crossoverRate);
+                break;
+            case "TPC":
+                offspring = TPC(parents[0].jumps, parents[1].jumps, crossoverRate);
+                break;
+        }
+        
+        switch (mutationMethod) {
+            case "randomResetting":
+                randomResetting(offspring, mutationRate);
+                break;
+        }
+
+        genomes.push(offspring);
+    }
+
+    console.log(population.length);
+    console.log(instance.size);
+
+    if (population.length < instance.size) {
+        population.forEach(function(ball, idx) {
+            ball.jumps = genomes[idx];
+            ball.reset();
+        });
+
+        // add extra indiviuals to the population
+        let filter = population[0].body.collisionFilter;
+        for(let i = population.length; i < instance.size; i++) {
+            let ball = new Ball(400, 582, 8, { inertia: Infinity, collisionFilter: filter});
+            ball.jumps = genomes[i];
+            population.push(ball);
+            Matter.World.add(instance.engine.world, ball.body);
+        }
+    }
+    else {
+        genomes.forEach(function(jumps, idx) {
+            population[idx].jumps = jumps;
+            population[idx].reset();
+        });
+
+        // remove the extra individuals
+        if (population.length > instance.size) {
+            let removed = population.splice(instance.size);
+            removed.forEach(function(ball) {
+                Matter.World.remove(instance.engine.world, ball.body);
+            });
+        }
+    }
 }
 
 function distance(bodyA, bodyB) {
@@ -220,9 +273,6 @@ function validation() {
     let populationSize = parseInt($("#population").val());
     let crossoverRate = parseFloat($("#crossover-rate").val());
     let mutationRate = parseFloat($("#mutation-rate").val());
-
-    console.log(crossoverRate);
-    console.log(mutationRate);
 
     // population size validation
     if (isNaN(populationSize)) {
@@ -292,7 +342,6 @@ $(document).ready(function() {
             instance.crossoverRate = $("#crossover-rate").val();
             instance.mutationMethod = $("#mutation-method").val();
             instance.mutationRate = $("#mutation-rate").val();
-            console.log(instance);
             $("#alert").show().removeClass();
             $("#alert").addClass("alert alert-success").text("Successfully applied settings");
             $("#alert").fadeOut(2000);
@@ -322,7 +371,6 @@ $(document).ready(function() {
     })
 
     $("#fast-forward").click(function() {
-        console.log(instance)
         if (instance.speed == 32) {
             instance.speed = 1;
         }
