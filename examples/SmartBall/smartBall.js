@@ -223,6 +223,12 @@ function newGeneration(instance) {
             case "randomResetting":
                 randomResetting(offspring, mutationRate);
                 break;
+            case "swapMutation":
+                swapMutation(offspring, mutationRate);
+                break;
+            case "scrambleMutation":
+                scrambleMutation(offspring, mutationRate);
+                break;
         }
 
         genomes.push(offspring);

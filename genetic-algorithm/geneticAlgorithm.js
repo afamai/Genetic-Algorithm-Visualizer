@@ -19,6 +19,25 @@ function swapMutation(genome, mutationRate) {
     }
 }
 
+// scramble mutation
+function scrambleMutation(genome, mutationRate) {
+    if (Math.random() < mutationRate) {
+        let index1 = Math.floor(Math.random() * genome.length);
+        let index2 = Math.floor(Math.random() * genome.length);
+
+        if (index2 < index1) {
+            let temp = index1;
+            index1 = index2;
+            index2 = temp;
+        }
+        
+        let shuffle = genome.splice(index1, index2).sort(() => 0.5 - Math.random());
+        shuffle.forEach(function(gene, idx) {
+            genome.splice(index1 + idx, 0, gene);
+        });
+    }
+}
+
 // single point crossover
 function SPC(parent1, parent2, crossoverRate) {
     if (Math.random() < crossoverRate) {        
