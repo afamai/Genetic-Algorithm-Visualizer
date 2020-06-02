@@ -339,7 +339,7 @@ $(document).ready(function() {
     $("#mutation-method").val(instance.mutationMethod);
     $("#mutation-rate").val(instance.mutationRate);
 
-    $("#apply,#restart").click(function() {
+    $("#apply,#new-run").click(function() {
         let valid = validation();
         if (valid) {
             instance.size = $("#population").val();
@@ -352,8 +352,8 @@ $(document).ready(function() {
             $("#alert").addClass("alert alert-success").text("Successfully applied settings");
             $("#alert").fadeOut(2000);
 
-            if($(this).attr("id") == "restart") {
-                console.log("restart");
+            if($(this).attr("id") == "new-run") {
+                instance.generation = 0;
             }
         } 
         else {
