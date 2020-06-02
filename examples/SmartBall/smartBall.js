@@ -143,7 +143,8 @@ function init() {
         crossoverMethod: "SPC",
         crossoverRate: 0.8,
         mutationMethod: "randomResetting",
-        mutationRate: 0.1
+        mutationRate: 0.1,
+        elitesToKeep: 5
     }
 
    return instance;
@@ -196,9 +197,15 @@ function newGeneration(instance) {
     let mutationRate = instance.mutationRate;
     let crossoverMethod = instance.crossoverMethod;
     let crossoverRate = instance.crossoverRate;
+    let elitesToKeep = instance.elitesToKeep;
 
     let genomes = [];
-    for (var i = 0; i < instance.size; i++) {
+    if (elitesToKeep > 0) {
+        population.sort((a, b) => a.getFitness() > b.getFitness() ? -1 : 1);
+        genomes = population.slice(0, elitesToKeep).map((v) => v.jumps);
+    }
+
+    for (var i = elitesToKeep; i < instance.size; i++) {
         let parents = [];
         switch (selectionMethod) {
             case "RWS":
@@ -206,6 +213,9 @@ function newGeneration(instance) {
                 break;
             case "SUS":
                 parents = SUS(population, 2);
+                break;
+            case "TOS":
+                parents = TOS(population, 2, 20);
                 break;
         }
 
@@ -279,6 +289,7 @@ function validation() {
     let populationSize = parseInt($("#population").val());
     let crossoverRate = parseFloat($("#crossover-rate").val());
     let mutationRate = parseFloat($("#mutation-rate").val());
+    let elitesToKeep = parseInt($("#elite-amount").val());
 
     // population size validation
     if (isNaN(populationSize)) {
@@ -324,7 +335,22 @@ function validation() {
     }
     else {
         $("#mutation-rate").removeClass("is-invalid");
-    }  
+    }
+    
+    // elites to keep validation
+    if (isNaN(elitesToKeep)) {
+        $("#elite-amount-error").text("Must be a valid number");
+        $("#elite-amount").addClass("is-invalid");
+        valid = false;
+    } 
+    else if (elitesToKeep < 0 || elitesToKeep > 15){
+        $("#elite-amount-error").text("Elites to keep must be between 1 - 15" );
+        $("#elite-amount").addClass("is-invalid");
+        valid = false
+    }
+    else {
+        $("#elite-amount").removeClass("is-invalid");
+    }
     return valid;
 }
 
@@ -338,16 +364,19 @@ $(document).ready(function() {
     $("#crossover-rate").val(instance.crossoverRate);
     $("#mutation-method").val(instance.mutationMethod);
     $("#mutation-rate").val(instance.mutationRate);
+    $("#elite-amount").val(instance.elitesToKeep);
 
     $("#apply,#new-run").click(function() {
-        let valid = validation();
+        let valid = validation(instance);
         if (valid) {
-            instance.size = $("#population").val();
+            instance.size = parseInt($("#population").val());
             instance.selectionMethod = $("#selection-method").val();
             instance.crossoverMethod = $("#crossover-method").val();
-            instance.crossoverRate = $("#crossover-rate").val();
+            instance.crossoverRate = parseFloat($("#crossover-rate").val());
             instance.mutationMethod = $("#mutation-method").val();
-            instance.mutationRate = $("#mutation-rate").val();
+            instance.mutationRate = parseFloat($("#mutation-rate").val());
+            instance.elitesToKeep = parseInt($("#elite-amount").val());
+
             $("#alert").show().removeClass();
             $("#alert").addClass("alert alert-success").text("Successfully applied settings");
             $("#alert").fadeOut(2000);

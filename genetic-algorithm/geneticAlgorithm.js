@@ -74,6 +74,7 @@ function TPC(parent1, parent2, crossoverRate) {
         let index2 = Math.floor(Math.random() * (len - index1 - 1) + index1);
         return parent1.slice(0, index1).concat(parent2.slice(index1, index2)).concat(parent1.slice(index2));
     }
+    return parent1
 }
 
 function TOS(population, amount, k) {
