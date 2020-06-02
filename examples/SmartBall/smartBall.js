@@ -229,6 +229,9 @@ function newGeneration(instance) {
             case "scrambleMutation":
                 scrambleMutation(offspring, mutationRate);
                 break;
+            case "inversionMutation":
+                inversionMutation(offspring, mutationRate);
+                break;
         }
 
         genomes.push(offspring);
