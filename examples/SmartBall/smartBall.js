@@ -6,7 +6,7 @@ class Jump {
     }
 
     randomize() {
-        let power = Math.random() * 0.007;
+        let power = Math.random() * 0.005 + 0.003;
         let angle = Math.random() * Math.PI + Math.PI;
         this.x = Math.cos(angle) * power;
         this.y = Math.sin(angle) * power;
@@ -14,17 +14,18 @@ class Jump {
 }
 
 class Ball {
-    constructor(x, y, radius, params) {
-        this.body = Matter.Bodies.circle(x, y, radius, params);
+    constructor(body) {
+        this.body = body;
         this.body.ball = this;
-        this.startPosition = {x: x, y: y};
+        this.startPosition = {x: body.position.x, y: body.position.y};
         this.done = false;
         this.counter = 0;
+        this.onGround = true;
         this.distanceToTarget = Infinity;
 
         // initialize jumps
         this.jumps = [];
-        for(var i = 0; i < 25; i++) {
+        for(var i = 0; i < 20; i++) {
             this.jumps.push(new Jump());
         }
     }
@@ -34,7 +35,7 @@ class Ball {
     }
 
     getFitness() {
-        return 1 / (1 + this.distanceToTarget);
+        return 1 / this.distanceToTarget;
     }
 
     reset() {
@@ -46,8 +47,8 @@ class Ball {
 
     // update
     update() {
-        if(!this.isMoving()) {
-            if (this.counter < 25) {
+        if(!this.isMoving() && this.onGround) {
+            if (this.counter < this.jumps.length) {
                 let jump = this.jumps[this.counter++];
                 this.body.force = {x: jump.x, y: jump.y};
             } 
@@ -56,7 +57,7 @@ class Ball {
             }
         }
         else {
-            this.done = this.body.velocity.y > 25;
+            this.done = this.body.velocity.y > 24;
         }
     }
 }
@@ -69,6 +70,7 @@ function init() {
     World = Matter.World,
     Bodies = Matter.Bodies;
     Events = Matter.Events;
+    Body = Matter.Body;
 
    // create an engine
    var engine = Engine.create();
@@ -87,7 +89,10 @@ function init() {
    var population = [];
    // generate the population 
    for (var i = 0; i < size; i++) {
-       let ball = new Ball(400, 582, 8, { inertia: Infinity, collisionFilter: { category: ballCategory, mask: defaultCategory }});
+       let circle = Matter.Bodies.circle(400, 582, 8);
+       let sensor = Matter.Bodies.circle(400, 590, 1, { isSensor: true })
+       let body = Body.create({ parts: [circle, sensor], inertia: Infinity, collisionFilter: { category: ballCategory, mask: defaultCategory }})
+       let ball = new Ball(body);
 
        population.push(ball);
        World.add(engine.world, ball.body);
@@ -97,32 +102,72 @@ function init() {
    World.add(engine.world, [
        // walls
        //Bodies.rectangle(400, -90, 1200, 200, params),
-       Bodies.rectangle(400, 690, 10000, 200, params),
+       Bodies.rectangle(400, 690, 1000, 200, params),
        //Bodies.rectangle(890, 300, 200, 1000, params),
        //Bodies.rectangle(-90, 300, 200, 1000, params),
        // platforms
-       Bodies.rectangle(400, 150, 100, 20, params),
-       Bodies.rectangle(600, 150, 100, 20, params),
-       Bodies.rectangle(220, 230, 100, 20, params),
-       Bodies.rectangle(400, 320, 100, 20, params),
-       Bodies.rectangle(280, 420, 100, 20, params),
-       Bodies.rectangle(520, 420, 100, 20, params),
-       Bodies.rectangle(150, 520, 100, 20, params),
-       Bodies.rectangle(650, 520, 100, 20, params)
+       Bodies.rectangle(400, 180, 100, 5, params),
+       Bodies.rectangle(600, 180, 100, 5, params),
+       Bodies.rectangle(220, 260, 100, 5, params),
+       Bodies.rectangle(400, 350, 100, 5, params),
+       Bodies.rectangle(280, 450, 100, 5, params),
+       Bodies.rectangle(520, 450, 100, 5, params),
+       Bodies.rectangle(150, 520, 100, 5, params),
+       Bodies.rectangle(650, 520, 100, 5, params)
    ]);
 
    // add target
-   var target = Bodies.circle(600, 100, 10, params);
+   var target = Bodies.circle(220, 220, 20, params);
    World.add(engine.world, target);
 
    // collision handling
+   Events.on(engine, "collisionStart", function(event) {
+        var pairs = event.pairs.slice();
+        pairs.forEach(function(pair) {
+            // check if ball has hit the ground
+            if (pair.isSensor) {
+                if (pair.bodyA.isSensor) {
+                    pair.bodyA.parent.ball.onGround = true;
+                }
+                else {
+                    pair.bodyB.parent.ball.onGround = true;
+                }
+            }
+        })
+   });
+
+   Events.on(engine, "collisionActive", function(event) {
+        var pairs = event.pairs.slice();
+        pairs.forEach(function(pair) {
+            // check if ball has hit the ground
+            if (pair.isSensor) {
+                if (pair.bodyA.isSensor) {
+                    pair.bodyA.parent.ball.onGround = true;
+                }
+                else {
+                    pair.bodyB.parent.ball.onGround = true;
+                }
+            }
+        })
+    })
+
    Events.on(engine, "collisionEnd", function(event) {
        var pairs = event.pairs.slice();
        pairs.forEach(function(pair) {
+           // check if ball collide with the target
            if (pair.bodyA.collisionFilter.category == ballCategory && pair.bodyB == target) {
                World.remove(engine.world, pair.bodyA);
                pair.bodyA.ball.distanceToTarget = 0;
                pair.bodyA.ball.done = true;
+           }
+           // check if ball has left the ground
+           if (pair.isSensor) {
+               if (pair.bodyA.isSensor) {
+                   pair.bodyA.parent.ball.onGround = false;
+               }
+               else {
+                   pair.bodyB.parent.ball.onGround = false;
+               }
            }
        })
    });
@@ -140,11 +185,11 @@ function init() {
         speed: 1,
         size: size,
         selectionMethod: "RWS",
-        crossoverMethod: "SPC",
-        crossoverRate: 0.8,
+        crossoverMethod: "TPC",
+        crossoverRate: 0.85,
         mutationMethod: "randomResetting",
-        mutationRate: 0.1,
-        elitesToKeep: 5
+        mutationRate: 0.05,
+        elitesToKeep: 10
     }
 
    return instance;
@@ -163,9 +208,20 @@ function runGeneration(instance) {
     population.forEach(function(ball) {
         if (!ball.done) {
             ball.update();
+            
+            // calculate the distance between the ball and target
             let dist = distance(ball.body, target);
             if (dist < ball.distanceToTarget) {
                 ball.distanceToTarget = dist;
+            }
+            
+            // ensure that the ball is within the boundaries
+            let position = ball.body.position
+            if (position.x > 800) {
+                Matter.Body.setPosition(ball.body, {x: 0, y: position.y});
+            }
+            else if (position.x < 0) {
+                Matter.Body.setPosition(ball.body, {x: 800, y: position.y});
             }
             generationEnd = false;
         }
@@ -205,7 +261,7 @@ function newGeneration(instance) {
         genomes = population.slice(0, elitesToKeep).map((v) => v.jumps);
     }
 
-    for (var i = elitesToKeep; i < instance.size; i++) {
+    for (var i = genomes.length; i < instance.size; i++) {
         let parents = [];
         switch (selectionMethod) {
             case "RWS":
@@ -215,7 +271,7 @@ function newGeneration(instance) {
                 parents = SUS(population, 2);
                 break;
             case "TOS":
-                parents = TOS(population, 2, 20);
+                parents = TOS(population, 2, 8);
                 break;
         }
 
@@ -256,7 +312,10 @@ function newGeneration(instance) {
         // add extra indiviuals to the population
         let filter = population[0].body.collisionFilter;
         for(let i = population.length; i < instance.size; i++) {
-            let ball = new Ball(400, 582, 8, { inertia: Infinity, collisionFilter: filter});
+            let circle = Matter.Bodies.circle(400, 582, 8);
+            let sensor = Matter.Bodies.circle(400, 590, 0.05, { isSensor: true })
+            let body = Body.create({ parts: [circle, sensor], inertia: Infinity, collisionFilter: filter})
+            let ball = new Ball(body);
             ball.jumps = genomes[i];
             population.push(ball);
             Matter.World.add(instance.engine.world, ball.body);
