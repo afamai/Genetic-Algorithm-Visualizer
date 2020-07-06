@@ -1,3 +1,14 @@
+class Test {
+    constructor(x) {
+        this.x = x;
+    }
+}
+
+a = [];
+for(var i = 0; i < 10; i++) {
+    a.push(new Test(i));
+}
+
 // random resetting
 function randomResetting(genome, mutationRate) {
     genome.forEach(function(gene) {
