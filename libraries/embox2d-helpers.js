@@ -64,7 +64,7 @@ function createPolygonShape(vertices) {
         Box2D.HEAPF32[buffer + offset >> 2] = vertices[i].get_x();
         Box2D.HEAPF32[buffer + (offset + 4) >> 2] = vertices[i].get_y();
         offset += 8;
-    }            
+    }
     var ptr_wrapped = Box2D.wrapPointer(buffer, Box2D.b2Vec2);
     shape.Set(ptr_wrapped, vertices.length);
     return shape;

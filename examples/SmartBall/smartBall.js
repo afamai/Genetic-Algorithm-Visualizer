@@ -84,9 +84,8 @@ function init() {
     ground.CreateFixture(shape, 0.0);
     
     shape = new b2PolygonShape();
-    shape.SetAsBox(6.0, 0.25, new b2Vec2(-1.5, 10.0), 0);
+    shape.SetAsBox(50.0, 10, new b2Vec2(100, 100), 0);
     ground.CreateFixture(shape, 0.0);
-    console.log(shape);
     
     shape = new b2CircleShape();
     shape.set_m_radius(5);
@@ -95,6 +94,7 @@ function init() {
     bd.set_position(new b2Vec2(400, 20));
     var body = world.CreateBody(bd);
     body.CreateFixture(shape, 0.0);
+    
 }
 
 function draw() {
@@ -120,8 +120,19 @@ function draw() {
             }
             else if (type == b2Shape.e_polygon) {
                 let polygon = Box2D.castObject(fixture.GetShape(), b2PolygonShape);
-                console.log(polygon);
                 let vertexCount = polygon.m_count;
+                
+                // draw the polygon
+                context.beginPath();
+                let initPoint = polygon.GetVertex(0);
+                context.moveTo(initPoint.x, initPoint.y);
+                for (let i = 1; i < vertexCount; i++) {
+                    let vertex = polygon.GetVertex(i);
+                    context.lineTo(vertex.x, vertex.y);
+                }
+                // draw the last line back to the init point
+                context.lineTo(initPoint.x, initPoint.y);
+                context.stroke();
             }
             else if (type == b2Shape.e_circle) {
                 let circle = Box2D.castObject(fixture.GetShape(), b2CircleShape);
