@@ -80,18 +80,18 @@ function init() {
     let ground = world.CreateBody(new b2BodyDef());
 
     let shape = new b2EdgeShape();
-    shape.Set(new b2Vec2(0.0, 590.0), new b2Vec2(800.0, 590.0));
+    shape.Set(new b2Vec2(-20, -14.0), new b2Vec2(20.0, -14.0));
     ground.CreateFixture(shape, 0.0);
-    
+
     shape = new b2PolygonShape();
-    shape.SetAsBox(50.0, 10, new b2Vec2(100, 100), 0);
+    shape.SetAsBox(2, 0.3, new b2Vec2(0, 0), 0);
     ground.CreateFixture(shape, 0.0);
     
     shape = new b2CircleShape();
-    shape.set_m_radius(5);
+    shape.set_m_radius(0.5);
     var bd = new b2BodyDef();
     bd.set_type(b2_dynamicBody);
-    bd.set_position(new b2Vec2(400, 20));
+    bd.set_position(new b2Vec2(5, 0));
     var body = world.CreateBody(bd);
     body.CreateFixture(shape, 0.0);
     
@@ -101,18 +101,18 @@ function draw() {
     context.fillStyle = 'rgb(0,0,0)';
     context.fillRect( 0, 0, canvas.width, canvas.height );
     
-    context.save();          
-    //context.translate(canvasOffset.x, canvasOffset.y);           
-    //context.fillStyle = 'rgb(255,255,0)';
+    context.save();
+    context.translate(canvas.width/2, canvas.height/2);          
+    context.scale(1,-1); 
+    context.scale(20, 20);
+    context.lineWidth /= 20;
+
     context.strokeStyle = 'rgb(255, 255, 255)';
-    console.log(world.GetBodyList());
     for (body = world.GetBodyList(); body.a != 0; body = body.GetNext()) {
-        console.log(body);
         for (fixture = body.GetFixtureList(); fixture.a != 0; fixture = fixture.GetNext()) {
             let type = fixture.GetType();
             if (type == b2Shape.e_edge) {
                 let edge = Box2D.castObject(fixture.GetShape(), b2EdgeShape);
-                console.log(edge);
                 context.beginPath();
                 context.moveTo(edge.m_vertex1.x, edge.m_vertex1.y);
                 context.lineTo(edge.m_vertex2.x, edge.m_vertex2.y);
@@ -147,6 +147,10 @@ function draw() {
     context.restore();
 }
 
+function step() {
+    world.Step(1/60, 8, 3);
+    draw();
+}
 
 init_jumps = null;
 // INITIALIZATION
@@ -613,6 +617,12 @@ function validation() {
     return valid;
 }
 var b2 = null;
+
+function animate() {
+    requestAnimationFrame(animate);
+    step();
+}
+
 $(document).ready(function() {
     //var instance = init();
     Box2D().then(function(Box2D) {
@@ -620,7 +630,7 @@ $(document).ready(function() {
         this.Box2D = Box2D;
         console.log(Box2D);
         init();
-        draw();
+        animate();
     });
     
     // initialize the ui
