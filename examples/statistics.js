@@ -46,8 +46,9 @@ function updateStatistics(population, generation) {
     if (config.data.labels.slice(-1) < generation){
         config.data.labels.push(generation);
     }
-
+    
     let datasets = config.data.datasets;
+    // NOTE: There is a bug here where it does not report the last generation results.
     // if generation == 1 then start a new run
     if (generation == 1) {
         // randomize a color
