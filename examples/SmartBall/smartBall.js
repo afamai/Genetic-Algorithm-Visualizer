@@ -54,7 +54,7 @@ class Ball {
                 let jump = this.jumps[this.counter++];
                 this.body.ApplyForceToCenter(new b2Vec2(jump.x, jump.y), true);
             } 
-            else {
+            else if (velocity.x == 0) {
                 this.done = true;
             }
         }
@@ -191,11 +191,9 @@ function step() {
     // find the distance between each ball and the target
     let generationEnd = true;
     population.forEach(function (ball) {
-        let targetPos = target.GetPosition();
         if (!ball.done) {
             ball.update();
-            let pos = ball.body.GetPosition();
-            let dist = Math.sqrt((targetPos.x - pos.x)**2 + (targetPos.y - pos.y)**2);
+            let dist = distance(ball.body, target);
             if (dist < ball.distanceToTarget) {
                 ball.distanceToTarget = dist;
             }
@@ -322,8 +320,8 @@ function newGeneration(instance) {
 }
 
 function distance(bodyA, bodyB) {
-    let posA = bodyA.position;
-    let posB = bodyB.position;
+    let posA = bodyA.GetPosition();
+    let posB = bodyB.GetPosition();
     return Math.sqrt((posA.x - posB.x)**2 + (posA.y - posB.y)**2);
 }
 
