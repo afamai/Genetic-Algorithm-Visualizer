@@ -74,6 +74,7 @@ var population = null;
 var target = null;
 var generation = null;
 var instance = null;
+var counter = 1;
 
 function init() {
     canvas = document.getElementById("canvas");
@@ -244,8 +245,6 @@ function step() {
 }
 
 function newGeneration(instance) {
-    console.log(tick);
-    tick = 0;
     // get parents
     let population = instance.population;
     let selectionMethod = instance.selectionMethod;
@@ -255,28 +254,11 @@ function newGeneration(instance) {
     let crossoverRate = instance.crossoverRate;
     let elitesToKeep = instance.elitesToKeep;
 
-    let genomes = [];
+    let genomes = null;
     if (elitesToKeep > 0) {
         population.sort((a, b) => a.getFitness() > b.getFitness() ? -1 : 1);
-        genomes = [init_jumps];
-        // genomes = population.slice(0, elitesToKeep).map((v) => v.jumps);
-        // population[0].jumps.forEach(function(j) {
-        //     console.log(j.x, j.y);
-        // })
+        genomes = population.slice(0, elitesToKeep).map((v) => v.jumps);
     }
-
-    console.log(same(population[0].jumps, genomes[0]));
-    let isSame = same(population[0].jumps, init_jumps);
-    console.log(isSame)
-    // init_jumps.forEach(function(e) {
-    //     console.log(e);
-    // })
-
-    console.log("------------")
-    population.forEach(function(e) {
-        console.log(e.getFitness(), e.distanceToTarget);
-    })
-    console.log("------------")
 
     for (var i = genomes.length; i < instance.size; i++) {
         let parents = [];
@@ -429,11 +411,20 @@ function validation() {
     }
     return valid;
 }
-var b2 = null;
 
 function animate() {
-    requestAnimationFrame(animate);
+    if (instance.pause)
+        return;
+
     step();
+    if (counter >= instance.speed) {
+        requestAnimationFrame(animate);
+        counter = 1;
+    }
+    else {
+        counter++;
+        animate();
+    }
 }
 
 $(document).ready(function() {
@@ -486,7 +477,7 @@ $(document).ready(function() {
         instance.pause = false;
         $(this).addClass("disabled").prop( "disabled", true);
         $("#pause").removeClass("disabled").prop( "disabled", false);
-        runGeneration(instance);
+        animate();
     });
 
     $("#pause").click(function() {
