@@ -456,7 +456,13 @@ $(document).ready(function() {
 
             if($(this).attr("id") == "new-run") {
                 generation = 0;
-                initPopulation();
+                // clear out all bodies from the world
+                population.forEach(ball => world.DestroyBody(ball.body));
+                population = [];
+                // generate new balls
+                for (let i = 0; i < instance.populationSize; i++) {
+                    population.push(new Ball(startPosition));
+                }
             }
         } 
         else {

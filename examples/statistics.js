@@ -50,12 +50,16 @@ function updateStatistics(population, generation) {
     let datasets = config.data.datasets;
     // if generation == 1 then start a new run
     if (generation == 1) {
+        // randomize a color
+        let r = Math.random() * 255;
+        let g = Math.random() * 255;
+        let b = Math.random() * 255;
         let runNum = datasets.length / 2 + 1;
         datasets.push({
             label: "Run " + runNum + " Best",
             lineTension: 0,
             data: [0, bestFitness],
-            borderColor: "rgba(255,159,64,1)",
+            borderColor: "rgb(" + r + "," + g + "," + b + ",1)",
             borderWidth: 1,
             fill: false
         }) 
@@ -64,7 +68,7 @@ function updateStatistics(population, generation) {
             label: "Run " + runNum + " Average",
             lineTension: 0,
             data: [0, averageFitness],
-            borderColor: "rgba(255,159,64,0.5)",
+            borderColor: "rgb(" + r + "," + g + "," + b + ",0.5)",
             borderWidth: 1,
             fill: false
         }) 
