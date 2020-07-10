@@ -151,7 +151,7 @@ function init() {
 
     // create target
     let bodyDef = new b2BodyDef();
-    bodyDef.set_position(new b2Vec2(0, -11));
+    bodyDef.set_position(new b2Vec2(0, 10));
     target = world.CreateBody(bodyDef);
 
     let circle = new b2CircleShape();
