@@ -16,7 +16,8 @@ class Jump {
 class Ball {
     constructor(body) {
         this.body = body;
-        this.startPosition = body.GetPosition();
+        let position = body.GetPosition();
+        this.startPosition = new b2Vec2(position.x, position.y);
         this.done = false;
         this.counter = 0;
         this.onGround = true;
@@ -39,7 +40,7 @@ class Ball {
     }
 
     reset() {
-        Matter.Body.setPosition(this.body, this.startPosition);
+        this.body.SetTransform(this.startPosition, this.body.GetAngle());
         this.counter = 0;
         this.distanceToTarget = Infinity;
         this.done = false;
@@ -195,10 +196,17 @@ function step() {
             ball.update();
             let pos = ball.body.GetPosition();
             let dist = Math.sqrt((targetPos.x - pos.x)**2 + (targetPos.y - pos.y)**2);
-            console.log(dist);
+            if (dist < ball.distanceToTarget) {
+                ball.distanceToTarget = dist;
+            }
+            console.log(ball.distanceToTarget);
             generationEnd = false;
         }
-    })
+    });
+
+    if (generationEnd) {
+        population.forEach(ball => ball.reset());
+    }
     draw();
 }
 
