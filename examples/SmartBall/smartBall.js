@@ -115,7 +115,7 @@ function init() {
     ground.CreateFixture(shape, 0.0);
 
     // generate initial population
-    let populationSize = 100;
+    let populationSize = 200;
     let startPosition = new b2Vec2(0, -13.5);
     var defaultCategory = 0x0001;
     var ballCategory = 0x0002;
