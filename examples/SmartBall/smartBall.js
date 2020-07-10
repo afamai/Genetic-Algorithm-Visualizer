@@ -6,8 +6,8 @@ class Jump {
     }
 
     randomize() {
-        let power = Math.random() * 0.005 + 0.003;
-        let angle = Math.random() * Math.PI + Math.PI;
+        let power = Math.random() * 100 + 30;
+        let angle = Math.random() * Math.PI;
         this.x = Math.cos(angle) * power;
         this.y = Math.sin(angle) * power;
     };
@@ -31,10 +31,6 @@ class Ball {
         }
     }
 
-    isMoving() {
-        return Math.round(this.body.speed) != 0 || Math.round(this.body.angularVelocity) != 0;
-    }
-
     getFitness() {
         if(this.isElite) {
             return 1;
@@ -51,17 +47,23 @@ class Ball {
 
     // update
     update() {
-        if(!this.isMoving() && this.onGround) {
+        let velocity = this.body.GetLinearVelocity();
+        if(velocity.y == 0) {
             if (this.counter < this.jumps.length) {
                 let jump = this.jumps[this.counter++];
-                this.body.force = {x: jump.x, y: jump.y};
+                this.body.ApplyForceToCenter(new b2Vec2(jump.x, jump.y), true);
             } 
             else {
                 this.done = true;
             }
         }
-        else {
-            this.done = this.body.velocity.y > 24;
+
+        let position = this.body.GetPosition();
+        if (position.x > 20.0) {
+            this.body.SetTransform(new b2Vec2(-20, position.y), this.body.GetAngle());
+        }
+        else if (position.x < -20) {
+            this.body.SetTransform(new b2Vec2(20, position.y), this.body.GetAngle());
         }
     }
 }
@@ -70,12 +72,13 @@ var world = null;
 var canvas = null;
 var context = null;
 var population = null;
+var target = null;
 
 function init() {
     canvas = document.getElementById("canvas");
     context = canvas.getContext('2d');
 
-    world = new b2World(new b2Vec2(0.0, -10.0));
+    world = new b2World(new b2Vec2(0.0, -15.0));
 
     let ground = world.CreateBody(new b2BodyDef());
 
@@ -105,7 +108,7 @@ function init() {
 
         let fixtureDef = new b2FixtureDef();
         fixtureDef.shape = circle;
-        fixtureDef.density = 1;
+        fixtureDef.density = 0.2;
         fixtureDef.friction = 1;
 
         fixtureDef.filter.categoryBits = ballCategory;
@@ -113,6 +116,7 @@ function init() {
 
         body.CreateFixture(fixtureDef);
         body.SetFixedRotation(true);
+        console.log(body);
 
         population.push(new Ball(body));
     }
@@ -120,7 +124,7 @@ function init() {
     // create target
     let bodyDef = new b2BodyDef();
     bodyDef.set_position(new b2Vec2(10, 10));
-    let target = world.CreateBody(bodyDef);
+    target = world.CreateBody(bodyDef);
 
     let circle = new b2CircleShape();
     circle.set_m_radius(1);
@@ -183,6 +187,18 @@ function draw() {
 
 function step() {
     world.Step(1/60, 8, 3);
+    // find the distance between each ball and the target
+    let generationEnd = true;
+    population.forEach(function (ball) {
+        let targetPos = target.GetPosition();
+        if (!ball.done) {
+            ball.update();
+            let pos = ball.body.GetPosition();
+            let dist = Math.sqrt((targetPos.x - pos.x)**2 + (targetPos.y - pos.y)**2);
+            console.log(dist);
+            generationEnd = false;
+        }
+    })
     draw();
 }
 
