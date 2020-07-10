@@ -49,12 +49,12 @@ class Ball {
     // update
     update() {
         let velocity = this.body.GetLinearVelocity();
-        if(velocity.y == 0) {
+        if(velocity.y == 0 && velocity.x == 0) {
             if (this.counter < this.jumps.length) {
                 let jump = this.jumps[this.counter++];
                 this.body.ApplyForceToCenter(new b2Vec2(jump.x, jump.y), true);
             } 
-            else if (velocity.x == 0) {
+            else {
                 this.done = true;
             }
         }
@@ -81,6 +81,7 @@ function init() {
 
     world = new b2World(new b2Vec2(0.0, -15.0));
 
+    // generate the platforms
     let ground = world.CreateBody(new b2BodyDef());
 
     let shape = new b2EdgeShape();
@@ -88,7 +89,27 @@ function init() {
     ground.CreateFixture(shape, 0.0);
 
     shape = new b2PolygonShape();
-    shape.SetAsBox(2, 0.3, new b2Vec2(0, 0), 0);
+    shape.SetAsBox(2.5, 0.4, new b2Vec2(-10, -10), 0);
+    ground.CreateFixture(shape, 0.0);
+
+    shape = new b2PolygonShape();
+    shape.SetAsBox(2.5, 0.4, new b2Vec2(10, -10), 0);
+    ground.CreateFixture(shape, 0.0);
+
+    shape = new b2PolygonShape();
+    shape.SetAsBox(2.5, 0.4, new b2Vec2(0, -5), 0);
+    ground.CreateFixture(shape, 0.0);
+
+    shape = new b2PolygonShape();
+    shape.SetAsBox(2.5, 0.4, new b2Vec2(-10, 0), 0);
+    ground.CreateFixture(shape, 0.0);
+
+    shape = new b2PolygonShape();
+    shape.SetAsBox(2.5, 0.4, new b2Vec2(10, 0), 0);
+    ground.CreateFixture(shape, 0.0);
+
+    shape = new b2PolygonShape();
+    shape.SetAsBox(2.5, 0.4, new b2Vec2(0, 5), 0);
     ground.CreateFixture(shape, 0.0);
 
     // generate initial population
@@ -110,7 +131,7 @@ function init() {
         let fixtureDef = new b2FixtureDef();
         fixtureDef.shape = circle;
         fixtureDef.density = 0.2;
-        fixtureDef.friction = 1;
+        fixtureDef.friction = 100;
 
         fixtureDef.filter.categoryBits = ballCategory;
         fixtureDef.filter.maskBits = defaultCategory;
@@ -124,7 +145,7 @@ function init() {
 
     // create target
     let bodyDef = new b2BodyDef();
-    bodyDef.set_position(new b2Vec2(10, 10));
+    bodyDef.set_position(new b2Vec2(0, 10));
     target = world.CreateBody(bodyDef);
 
     let circle = new b2CircleShape();
@@ -197,7 +218,7 @@ function step() {
             if (dist < ball.distanceToTarget) {
                 ball.distanceToTarget = dist;
             }
-            console.log(ball.distanceToTarget);
+            //console.log(ball.distanceToTarget);
             generationEnd = false;
         }
     });
