@@ -16,6 +16,22 @@ class Jump {
 class Ball {
     constructor(startPos) {
         this.startPosition = startPos;
+
+        this.done = false;
+        this.counter = 0;
+        this.distanceToTarget = Infinity;
+        this.isElite = false;
+
+        // initialize jumps
+        this.jumps = [];
+        for(var i = 0; i < 20; i++) {
+            this.jumps.push(new Jump());
+        }
+
+        this.createBody();
+    }
+
+    createBody() {
         let bodyDef = new b2BodyDef();
         bodyDef.set_position(this.startPosition);
         bodyDef.set_type(b2_dynamicBody);
@@ -34,19 +50,7 @@ class Ball {
 
         this.body.CreateFixture(fixtureDef);
         this.body.SetFixedRotation(true);
-
-        this.done = false;
-        this.counter = 0;
-        this.onGround = true;
-        this.distanceToTarget = Infinity;
-        this.best = false;
-        this.isElite = false;
-
-        // initialize jumps
-        this.jumps = [];
-        for(var i = 0; i < 20; i++) {
-            this.jumps.push(new Jump());
-        }
+        this.body.ball = this;
     }
 
     getFitness() {
@@ -56,16 +60,26 @@ class Ball {
     }
 
     reset() {
+        if (this.hit) {
+            this.createBody();
+        }
         this.body.SetTransform(this.startPosition, this.body.GetAngle());
         this.counter = 0;
         this.distanceToTarget = Infinity;
         this.done = false;
+        this.hit = false;
     }
 
     // update
     update() {
+        // destroy body from world if it hits the target
+        if (this.hit) {
+            world.DestroyBody(this.body);
+            this.done = true;
+        }
+
         let velocity = this.body.GetLinearVelocity();
-        if(velocity.y == 0 && velocity.x == 0) {
+        if (velocity.y == 0 && velocity.x == 0) {
             if (this.counter < this.jumps.length) {
                 let jump = this.jumps[this.counter++];
                 this.body.ApplyForceToCenter(new b2Vec2(jump.x, jump.y), true);
@@ -75,13 +89,7 @@ class Ball {
             }
         }
 
-        let position = this.body.GetPosition();
-        if (position.x > 20.0) {
-            this.body.SetTransform(new b2Vec2(-20, position.y), this.body.GetAngle());
-        }
-        else if (position.x < -20) {
-            this.body.SetTransform(new b2Vec2(20, position.y), this.body.GetAngle());
-        }
+        
     }
 }
 
@@ -133,7 +141,7 @@ function init() {
     ground.CreateFixture(shape, 0.0);
 
     // generate initial population
-    let populationSize = 200;
+    let populationSize = 1;
     startPosition = new b2Vec2(0, -13.5);
 
     population = [];
@@ -143,7 +151,7 @@ function init() {
 
     // create target
     let bodyDef = new b2BodyDef();
-    bodyDef.set_position(new b2Vec2(0, 10));
+    bodyDef.set_position(new b2Vec2(0, -11));
     target = world.CreateBody(bodyDef);
 
     let circle = new b2CircleShape();
@@ -152,6 +160,27 @@ function init() {
     fixtureDef.shape = circle;
 
     target.CreateFixture(fixtureDef);
+
+    // create collision listener
+    let listener =  new Box2D.JSContactListener();
+    listener.EndContact = function(contactPtr) {
+        let contact = Box2D.wrapPointer(contactPtr, b2Contact);
+        let fixtureA = contact.GetFixtureA();
+        let fixtureB = contact.GetFixtureB();
+        let bodyA = fixtureA.GetBody();
+        let bodyB = fixtureB.GetBody();
+        if (bodyB == target) {
+            bodyA.ball.distanceToTarget = 1;
+            bodyA.ball.hit = true;
+        }
+    }
+
+    // Empty implementations for unused methods.
+    listener.BeginContact = function() {};
+    listener.PreSolve = function() {};
+    listener.PostSolve = function() {};
+
+    world.SetContactListener( listener );
 
     // init variables
     generation = 1;
@@ -225,10 +254,20 @@ function step() {
     population.forEach(function (ball) {
         if (!ball.done) {
             ball.update();
-            let dist = distance(ball.body, target);
+            let body = ball.body;
+            let dist = distance(body, target);
             if (dist < ball.distanceToTarget) {
                 ball.distanceToTarget = dist;
             }
+
+            let position = body.GetPosition();
+            if (position.x > 20.0) {
+                body.SetTransform(new b2Vec2(-20, position.y), body.GetAngle());
+            }
+            else if (position.x < -20) {
+                body.SetTransform(new b2Vec2(20, position.y), body.GetAngle());
+            }
+
             generationEnd = false;
         }
     });
