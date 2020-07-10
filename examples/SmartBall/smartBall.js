@@ -33,7 +33,8 @@ class Ball {
     }
 
     getFitness() {
-        console.log(this.distanceToTarget);
+        if (this.best)
+            return 1;
         return 1 / this.distanceToTarget;
     }
 
@@ -232,21 +233,21 @@ function step() {
             if (dist < ball.distanceToTarget) {
                 ball.distanceToTarget = dist;
             }
-            //console.log(ball.distanceToTarget);
             generationEnd = false;
         }
     });
 
     if (generationEnd) {
         updateStatistics(population, generation++);
-        population.forEach(ball => ball.reset());
+        newGeneration();
+        //population.forEach(ball => ball.reset());
     }
     draw();
 }
 
-function newGeneration(instance) {
+function newGeneration() {
+
     // get parents
-    let population = instance.population;
     let selectionMethod = instance.selectionMethod;
     let mutationMethod = instance.mutationMethod;
     let mutationRate = instance.mutationRate;
@@ -259,8 +260,8 @@ function newGeneration(instance) {
         population.sort((a, b) => a.getFitness() > b.getFitness() ? -1 : 1);
         genomes = population.slice(0, elitesToKeep).map((v) => v.jumps);
     }
-
-    for (var i = genomes.length; i < instance.size; i++) {
+    //console.log(genomes)
+    for (var i = genomes.length; i < instance.populationSize; i++) {
         let parents = [];
         switch (selectionMethod) {
             case "RWS":
@@ -275,12 +276,14 @@ function newGeneration(instance) {
         }
 
         let offspring = null;
+        let parent1 = _.cloneDeep(parents[0].jumps);
+        let parent2 = _.cloneDeep(parents[1].jumps);
         switch (crossoverMethod) {
             case "SPC":
-                offspring = SPC(parents[0].jumps, parents[1].jumps, crossoverRate);
+                offspring = SPC(parent1, parent2, crossoverRate);
                 break;
             case "TPC":
-                offspring = TPC(parents[0].jumps, parents[1].jumps, crossoverRate);
+                offspring = TPC(parent1, parent2, crossoverRate);
                 break;
         }
         
@@ -302,15 +305,15 @@ function newGeneration(instance) {
         genomes.push(offspring);
     }
 
-    if (population.length < instance.size) {
+    if (population.length < instance.populationSize) {
         population.forEach(function(ball, idx) {
-            ball.jumps = genomes[idx];
+            ball.jumps = [].concat(genomes[idx]);
             ball.reset();
         });
 
         // add extra indiviuals to the population
         let filter = population[0].body.collisionFilter;
-        for(let i = population.length; i < instance.size; i++) {
+        for(let i = population.length; i < instance.populationSize; i++) {
             let circle = Matter.Bodies.circle(400, 582, 8);
             let sensor = Matter.Bodies.circle(400, 590, 0.1, { isSensor: true })
             let body = Body.create({ parts: [circle, sensor], inertia: Infinity, collisionFilter: filter})
@@ -327,8 +330,8 @@ function newGeneration(instance) {
         });
 
         // remove the extra individuals
-        if (population.length > instance.size) {
-            let removed = population.splice(instance.size);
+        if (population.length > instance.populationSize) {
+            let removed = population.splice(instance.populationSize);
             removed.forEach(function(ball) {
                 Matter.World.remove(instance.engine.world, ball.body);
             });
@@ -371,7 +374,6 @@ function validation() {
         valid = false;
     } 
     else if (crossoverRate < 0 || crossoverRate > 1){
-        console.log(crossoverRate)
         $("#crossover-rate-error").text("Crossover rate must be between 0.0 - 1.0");
         $("#crossover-rate").addClass("is-invalid");
         valid = false
@@ -450,7 +452,7 @@ $(document).ready(function() {
     $("#apply,#new-run").click(function() {
         let valid = validation(instance);
         if (valid) {
-            instance.size = parseInt($("#population").val());
+            instance.populationSize = parseInt($("#population").val());
             instance.selectionMethod = $("#selection-method").val();
             instance.crossoverMethod = $("#crossover-method").val();
             instance.crossoverRate = parseFloat($("#crossover-rate").val());
