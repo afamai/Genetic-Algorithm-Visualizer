@@ -33,9 +33,7 @@ class Ball {
     }
 
     getFitness() {
-        if(this.isElite) {
-            return 1;
-        }
+        console.log(this.distanceToTarget);
         return 1 / this.distanceToTarget;
     }
 
@@ -74,12 +72,14 @@ var canvas = null;
 var context = null;
 var population = null;
 var target = null;
+var generation = null;
+var instance = null;
 
 function init() {
     canvas = document.getElementById("canvas");
     context = canvas.getContext('2d');
 
-    world = new b2World(new b2Vec2(0.0, -15.0));
+    world = new b2World(new b2Vec2(0.0, -30.0));
 
     // generate the platforms
     let ground = world.CreateBody(new b2BodyDef());
@@ -113,7 +113,7 @@ function init() {
     ground.CreateFixture(shape, 0.0);
 
     // generate initial population
-    let populationSize = 1;
+    let populationSize = 100;
     let startPosition = new b2Vec2(0, -13.5);
     var defaultCategory = 0x0001;
     var ballCategory = 0x0002;
@@ -126,19 +126,18 @@ function init() {
         let body = world.CreateBody(bodyDef);
 
         let circle = new b2CircleShape();
-        circle.set_m_radius(0.5);
+        circle.set_m_radius(0.4);
 
         let fixtureDef = new b2FixtureDef();
         fixtureDef.shape = circle;
         fixtureDef.density = 0.2;
-        fixtureDef.friction = 100;
+        fixtureDef.friction = 5;
 
         fixtureDef.filter.categoryBits = ballCategory;
         fixtureDef.filter.maskBits = defaultCategory;
 
         body.CreateFixture(fixtureDef);
         body.SetFixedRotation(true);
-        console.log(body);
 
         population.push(new Ball(body));
     }
@@ -155,6 +154,20 @@ function init() {
     fixtureDef.filter.categoryBits = defaultCategory;
 
     target.CreateFixture(fixtureDef);
+
+    // init variables
+    generation = 1;
+    instance = {
+        populationSize: populationSize,
+        selectionMethod: "RWS",
+        crossoverMethod: "TPC",
+        crossoverRate: 0.8,
+        mutationMethod: "randomResetting",
+        mutationRate: 0.1,
+        elitesToKeep: 5,
+        speed: 1,
+        pause: false
+    }
 }
 
 function draw() {
@@ -224,6 +237,7 @@ function step() {
     });
 
     if (generationEnd) {
+        updateStatistics(population, generation++);
         population.forEach(ball => ball.reset());
     }
     draw();
@@ -429,65 +443,66 @@ $(document).ready(function() {
         this.Box2D = Box2D;
         console.log(Box2D);
         init();
+    
+        // initialize the ui
+        $("#population").val(instance.populationSize);
+        $("#selection-method").val(instance.selectionMethod);
+        $("#crossover-method").val(instance.crossoverMethod);
+        $("#crossover-rate").val(instance.crossoverRate);
+        $("#mutation-method").val(instance.mutationMethod);
+        $("#mutation-rate").val(instance.mutationRate);
+        $("#elite-amount").val(instance.elitesToKeep);
+        
         animate();
     });
-    
-    // initialize the ui
-    // $("#population").val(instance.size);
-    // $("#selection-method").val(instance.selectionMethod);
-    // $("#crossover-method").val(instance.crossoverMethod);
-    // $("#crossover-rate").val(instance.crossoverRate);
-    // $("#mutation-method").val(instance.mutationMethod);
-    // $("#mutation-rate").val(instance.mutationRate);
-    // $("#elite-amount").val(instance.elitesToKeep);
 
-    // $("#apply,#new-run").click(function() {
-    //     let valid = validation(instance);
-    //     if (valid) {
-    //         instance.size = parseInt($("#population").val());
-    //         instance.selectionMethod = $("#selection-method").val();
-    //         instance.crossoverMethod = $("#crossover-method").val();
-    //         instance.crossoverRate = parseFloat($("#crossover-rate").val());
-    //         instance.mutationMethod = $("#mutation-method").val();
-    //         instance.mutationRate = parseFloat($("#mutation-rate").val());
-    //         instance.elitesToKeep = parseInt($("#elite-amount").val());
+    $("#apply,#new-run").click(function() {
+        let valid = validation(instance);
+        if (valid) {
+            instance.size = parseInt($("#population").val());
+            instance.selectionMethod = $("#selection-method").val();
+            instance.crossoverMethod = $("#crossover-method").val();
+            instance.crossoverRate = parseFloat($("#crossover-rate").val());
+            instance.mutationMethod = $("#mutation-method").val();
+            instance.mutationRate = parseFloat($("#mutation-rate").val());
+            instance.elitesToKeep = parseInt($("#elite-amount").val());
 
-    //         $("#alert").show().removeClass();
-    //         $("#alert").addClass("alert alert-success").text("Successfully applied settings");
-    //         $("#alert").fadeOut(2000);
+            $("#alert").show().removeClass();
+            $("#alert").addClass("alert alert-success").text("Successfully applied settings");
+            $("#alert").fadeOut(2000);
 
-    //         if($(this).attr("id") == "new-run") {
-    //             instance.generation = 0;
-    //         }
-    //     } 
-    //     else {
-    //         $("#alert").show().removeClass();
-    //         $("#alert").addClass("alert alert-danger").text("Failed to apply settings");
-    //         $("#alert").fadeOut(2000);
-    //     }
-    // });
+            if($(this).attr("id") == "new-run") {
+                instance.generation = 0;
+            }
+        } 
+        else {
+            $("#alert").show().removeClass();
+            $("#alert").addClass("alert alert-danger").text("Failed to apply settings");
+            $("#alert").fadeOut(2000);
+        }
+    });
 
-    // $("#play").click(function() {
-    //     instance.pause = false;
-    //     $(this).addClass("disabled").prop( "disabled", true);
-    //     $("#pause").removeClass("disabled").prop( "disabled", false);
-    //     runGeneration(instance);
-    // });
+    $("#play").click(function() {
+        instance.pause = false;
+        $(this).addClass("disabled").prop( "disabled", true);
+        $("#pause").removeClass("disabled").prop( "disabled", false);
+        runGeneration(instance);
+    });
 
-    // $("#pause").click(function() {
-    //     instance.pause = true;
-    //     $(this).addClass("disabled").prop( "disabled", true);
-    //     $("#play").removeClass("disabled").prop( "disabled", false);
-    // })
+    $("#pause").click(function() {
+        instance.pause = true;
+        $(this).addClass("disabled").prop( "disabled", true);
+        $("#play").removeClass("disabled").prop( "disabled", false);
+    })
 
-    // $("#fast-forward").click(function() {
-    //     if (instance.speed == 32) {
-    //         instance.speed = 1;
-    //     }
-    //     else {
-    //         instance.speed *= 2;
-    //     }
-    //     $("#speed").text("x" + instance.speed);
-    // });
-
+    $("#fast-forward").click(function() {
+        if (instance.speed == 32) {
+            instance.speed = 1;
+        }
+        else {
+            instance.speed *= 2;
+        }
+        $("#speed").text("x" + instance.speed);
+    });
+        
 });
