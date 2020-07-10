@@ -141,7 +141,7 @@ function init() {
     ground.CreateFixture(shape, 0.0);
 
     // generate initial population
-    let populationSize = 1;
+    let populationSize = 200;
     startPosition = new b2Vec2(0, -13.5);
 
     population = [];
