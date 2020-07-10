@@ -16,8 +16,7 @@ class Jump {
 class Ball {
     constructor(body) {
         this.body = body;
-        this.body.ball = this;
-        this.startPosition = {x: body.position.x, y: body.position.y};
+        this.startPosition = body.GetPosition();
         this.done = false;
         this.counter = 0;
         this.onGround = true;
@@ -70,6 +69,7 @@ class Ball {
 var world = null;
 var canvas = null;
 var context = null;
+var population = null;
 
 function init() {
     canvas = document.getElementById("canvas");
@@ -86,15 +86,49 @@ function init() {
     shape = new b2PolygonShape();
     shape.SetAsBox(2, 0.3, new b2Vec2(0, 0), 0);
     ground.CreateFixture(shape, 0.0);
-    
-    shape = new b2CircleShape();
-    shape.set_m_radius(0.5);
-    var bd = new b2BodyDef();
-    bd.set_type(b2_dynamicBody);
-    bd.set_position(new b2Vec2(5, 0));
-    var body = world.CreateBody(bd);
-    body.CreateFixture(shape, 0.0);
-    
+
+    // generate initial population
+    let populationSize = 1;
+    let startPosition = new b2Vec2(0, -13.5);
+    var defaultCategory = 0x0001;
+    var ballCategory = 0x0002;
+
+    population = [];
+    for (let i = 0; i < populationSize; i++) {
+        let bodyDef = new b2BodyDef();
+        bodyDef.set_position(startPosition);
+        bodyDef.set_type(b2_dynamicBody);
+        let body = world.CreateBody(bodyDef);
+
+        let circle = new b2CircleShape();
+        circle.set_m_radius(0.5);
+
+        let fixtureDef = new b2FixtureDef();
+        fixtureDef.shape = circle;
+        fixtureDef.density = 1;
+        fixtureDef.friction = 1;
+
+        fixtureDef.filter.categoryBits = ballCategory;
+        fixtureDef.filter.maskBits = defaultCategory;
+
+        body.CreateFixture(fixtureDef);
+        body.SetFixedRotation(true);
+
+        population.push(new Ball(body));
+    }
+
+    // create target
+    let bodyDef = new b2BodyDef();
+    bodyDef.set_position(new b2Vec2(10, 10));
+    let target = world.CreateBody(bodyDef);
+
+    let circle = new b2CircleShape();
+    circle.set_m_radius(1);
+    let fixtureDef = new b2FixtureDef();
+    fixtureDef.shape = circle;
+    fixtureDef.filter.categoryBits = defaultCategory;
+
+    target.CreateFixture(fixtureDef);
 }
 
 function draw() {
