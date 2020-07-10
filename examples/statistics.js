@@ -53,6 +53,7 @@ function updateStatistics(population, generation) {
         let runNum = datasets.length / 2 + 1;
         datasets.push({
             label: "Run " + runNum + " Best",
+            lineTension: 0,
             data: [0, bestFitness],
             borderColor: "rgba(255,159,64,1)",
             borderWidth: 1,
@@ -61,6 +62,7 @@ function updateStatistics(population, generation) {
 
         datasets.push({
             label: "Run " + runNum + " Average",
+            lineTension: 0,
             data: [0, averageFitness],
             borderColor: "rgba(255,159,64,0.5)",
             borderWidth: 1,

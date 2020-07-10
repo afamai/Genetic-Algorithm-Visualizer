@@ -14,10 +14,27 @@ class Jump {
 }
 
 class Ball {
-    constructor(body) {
-        this.body = body;
-        let position = body.GetPosition();
-        this.startPosition = new b2Vec2(position.x, position.y);
+    constructor(startPos) {
+        this.startPosition = startPos;
+        let bodyDef = new b2BodyDef();
+        bodyDef.set_position(this.startPosition);
+        bodyDef.set_type(b2_dynamicBody);
+        this.body = world.CreateBody(bodyDef);
+
+        let circle = new b2CircleShape();
+        circle.set_m_radius(0.4);
+
+        let fixtureDef = new b2FixtureDef();
+        fixtureDef.shape = circle;
+        fixtureDef.density = 0.2;
+        fixtureDef.friction = 5;
+
+        fixtureDef.filter.categoryBits = 0x0002;
+        fixtureDef.filter.maskBits = 0x0001;
+
+        this.body.CreateFixture(fixtureDef);
+        this.body.SetFixedRotation(true);
+
         this.done = false;
         this.counter = 0;
         this.onGround = true;
@@ -72,6 +89,7 @@ var world = null;
 var canvas = null;
 var context = null;
 var population = null;
+var startPosition = null;
 var target = null;
 var generation = null;
 var instance = null;
@@ -116,32 +134,11 @@ function init() {
 
     // generate initial population
     let populationSize = 200;
-    let startPosition = new b2Vec2(0, -13.5);
-    var defaultCategory = 0x0001;
-    var ballCategory = 0x0002;
+    startPosition = new b2Vec2(0, -13.5);
 
     population = [];
     for (let i = 0; i < populationSize; i++) {
-        let bodyDef = new b2BodyDef();
-        bodyDef.set_position(startPosition);
-        bodyDef.set_type(b2_dynamicBody);
-        let body = world.CreateBody(bodyDef);
-
-        let circle = new b2CircleShape();
-        circle.set_m_radius(0.4);
-
-        let fixtureDef = new b2FixtureDef();
-        fixtureDef.shape = circle;
-        fixtureDef.density = 0.2;
-        fixtureDef.friction = 5;
-
-        fixtureDef.filter.categoryBits = ballCategory;
-        fixtureDef.filter.maskBits = defaultCategory;
-
-        body.CreateFixture(fixtureDef);
-        body.SetFixedRotation(true);
-
-        population.push(new Ball(body));
+        population.push(new Ball(startPosition));
     }
 
     // create target
@@ -153,7 +150,6 @@ function init() {
     circle.set_m_radius(1);
     let fixtureDef = new b2FixtureDef();
     fixtureDef.shape = circle;
-    fixtureDef.filter.categoryBits = defaultCategory;
 
     target.CreateFixture(fixtureDef);
 
@@ -260,7 +256,7 @@ function newGeneration() {
         population.sort((a, b) => a.getFitness() > b.getFitness() ? -1 : 1);
         genomes = population.slice(0, elitesToKeep).map((v) => v.jumps);
     }
-    //console.log(genomes)
+
     for (var i = genomes.length; i < instance.populationSize; i++) {
         let parents = [];
         switch (selectionMethod) {
@@ -312,15 +308,10 @@ function newGeneration() {
         });
 
         // add extra indiviuals to the population
-        let filter = population[0].body.collisionFilter;
         for(let i = population.length; i < instance.populationSize; i++) {
-            let circle = Matter.Bodies.circle(400, 582, 8);
-            let sensor = Matter.Bodies.circle(400, 590, 0.1, { isSensor: true })
-            let body = Body.create({ parts: [circle, sensor], inertia: Infinity, collisionFilter: filter})
-            let ball = new Ball(body);
+            let ball = new Ball(startPosition);
             ball.jumps = genomes[i];
             population.push(ball);
-            Matter.World.add(instance.engine.world, ball.body);
         }
     }
     else {
@@ -333,7 +324,7 @@ function newGeneration() {
         if (population.length > instance.populationSize) {
             let removed = population.splice(instance.populationSize);
             removed.forEach(function(ball) {
-                Matter.World.remove(instance.engine.world, ball.body);
+                world.DestroyBody(ball.body);
             });
         }
     }
@@ -414,18 +405,18 @@ function validation() {
     return valid;
 }
 
-function animate() {
+function run() {
     if (instance.pause)
         return;
 
     step();
     if (counter >= instance.speed) {
-        requestAnimationFrame(animate);
+        requestAnimationFrame(run);
         counter = 1;
     }
     else {
         counter++;
-        animate();
+        run();
     }
 }
 
@@ -434,7 +425,6 @@ $(document).ready(function() {
     Box2D().then(function(Box2D) {
         using(Box2D, "b2.+");
         this.Box2D = Box2D;
-        console.log(Box2D);
         init();
     
         // initialize the ui
@@ -446,7 +436,7 @@ $(document).ready(function() {
         $("#mutation-rate").val(instance.mutationRate);
         $("#elite-amount").val(instance.elitesToKeep);
         
-        animate();
+        run();
     });
 
     $("#apply,#new-run").click(function() {
@@ -465,7 +455,8 @@ $(document).ready(function() {
             $("#alert").fadeOut(2000);
 
             if($(this).attr("id") == "new-run") {
-                instance.generation = 0;
+                generation = 0;
+                initPopulation();
             }
         } 
         else {
@@ -479,7 +470,7 @@ $(document).ready(function() {
         instance.pause = false;
         $(this).addClass("disabled").prop( "disabled", true);
         $("#pause").removeClass("disabled").prop( "disabled", false);
-        animate();
+        run();
     });
 
     $("#pause").click(function() {
