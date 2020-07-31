@@ -1,0 +1,100 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
+        <script src="../../libraries/Box2D_v2.3.1_min.js"></script>
+        <script src="../../libraries/embox2d-helpers.js"></script>
+        <script src="../../libraries/Chart.js"></script>
+        <script src="../../libraries/lodash.js"></script>
+        <script src="../../genetic-algorithm/geneticAlgorithm.js"></script>
+        <script src="../statistics.js"></script>
+        <script src="./evolvingImages.js"></script> 
+        <title>Genetic Algorithm Visualizer</title>
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+                <a class="navbar-brand" href="#">Genetic Algorithm Visualizer</a>
+            </nav>
+        </header>
+        <main>
+            <div class="container">
+                <h2 class="mt-4 mb-3">Evolving Images</h2>
+                <div class="row">
+                    <div class="col text-center">
+                        <canvas id="canvas" width=800 height=600></canvas>
+                    </div>
+                    <div class="pt-2 col">
+                        <form>
+                            <h5>Play Settings</h5>
+                            <div class="row mb-3">
+                                <button id="play" type="button" class="btn btn-light ml-3 mr-2 disabled" disabled><i class="fas fa-play"></i></button>
+                                <button id="pause" type="button" class="btn btn-light mr-2"><i class="fas fa-pause"></i></button>
+                                <button id="fast-forward" type="button" class="btn btn-light mr-2"><i class="fas fa-fast-forward"></i></button>
+                                <p id="speed" class="mb-0">x1</p>
+                            </div>
+                            <h5>Algorithm Parameters</h5>
+                            <div class="form-group form-row">
+                                <label for="population" class="col">Population Size:</label>
+                                <input type="number" id="population" class="col form-control form-control-sm">
+                                <div id="population-error" class="invalid-feedback"></div>
+                            </div>
+                            <div class="form-group form-row">
+                                <label for="selection-method" class="col">Selection Method:</label>
+                                <select id="selection-method" class="col form-control form-control-sm">
+                                    <option value="RWS">Roulette Wheel Selection</option>
+                                    <option value="SUS">Stochastic Universal Sampling</option>
+                                    <option value="TOS">Tournament Selection</option>
+                                </select>
+                            </div>
+                            <div class="form-group form-row">
+                                <label for="crossover-method" class="col">Crossover Method:</label>
+                                <select id="crossover-method" class="col form-control form-control-sm">
+                                    <option value="SPC">Single Point Crossover</option>
+                                    <option value="TPC">Two Point Crossover</option>
+                                </select>
+                            </div>
+                            <div class="form-group form-row">
+                                <label for="crossover-rate" class="col">Crossover Rate:</label>
+                                <input type="number" id="crossover-rate" class="col form-control form-control-sm" step="0.01">
+                                <div id="crossover-rate-error" class="invalid-feedback"></div>
+                            </div>
+                            <div class="form-group form-row">
+                                <label for="mutation-method" class="col">Mutation Method:</label>
+                                <select id="mutation-method" class="col form-control form-control-sm">
+                                    <option value="randomResetting">Random Resetting</option>
+                                    <option value="swapMutation">Swap Mutation</option>
+                                    <option value="scrambleMutation">Scramble Mutation</option>
+                                    <option value="inversionMutation">Inversion Mutation</option>
+                                </select>
+                            </div>
+                            <div class="form-group form-row">
+                                <label for="mutation-rate" class="col">Mutation Rate:</label>
+                                <input type="number" id="mutation-rate" class="col form-control form-control-sm" step="0.01">
+                                <div id="mutation-rate-error" class="invalid-feedback"></div>
+                            </div>
+                            <div class="form-group form-row">
+                                <label for="elite-amount" class="col">Elites to Keep:</label>
+                                <input type="number" id="elite-amount" class="col form-control form-control-sm">
+                                <div id="elite-amount-error" class="invalid-feedback"></div>
+                            </div>
+                            <div class="form-group form-inline">
+                                <button id="apply" type="button" class="btn btn-primary mr-3">Apply</button>
+                                <button id="new-run" type="button" class="btn btn-primary">New Run</button>
+                            </div>
+                            <div id="alert" role="alert"></div>
+                        </form>
+                    </div>
+                </div>
+                <div id="statistics">
+                    <p id="current-stat" class="mb-5"></p>
+                    <div>
+                        <canvas id="chart" width="600" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>
