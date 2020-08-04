@@ -48,7 +48,13 @@ class PolygonImage {
             this.ctx.lineTo(vertices[0].x, vertices[0].y);
             this.ctx.fill();
         }
+
+        console.log(this.ctx.getImageData(0,0, width, height));
     }
+}
+
+function compare(img1, img2) {
+    
 }
 
 $(document).ready(function() {
@@ -61,6 +67,9 @@ $(document).ready(function() {
 
     let a = new PolygonImage(img.width, img.height);
 
-    console.log(context);
+    let m = new OffscreenCanvas(img.width, img.height);
+    let c = m.getContext('2d');
+    c.drawImage(img, 0,0);
+    console.log(c.getImageData(0,0,img.width, img.height));
     context.transferFromImageBitmap(a.canvas.transferToImageBitmap());
 });
