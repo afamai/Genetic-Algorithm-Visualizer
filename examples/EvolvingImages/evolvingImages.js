@@ -15,8 +15,10 @@ class Polygon {
     }
 
     randomize() {
-        for(let i = 0; i < 4; i++) {
-            this.vertices.push({x: Math.random() * this.width, y: Math.random() * this.height});
+        for(let i = 0; i < 10; i++) {
+            let x = (Math.random() * (this.width + 40)) - 20;
+            let y = (Math.random() * (this.height + 40)) - 20;
+            this.vertices.push({x: x, y: y});
         }
     }
 }
