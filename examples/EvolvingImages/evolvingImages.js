@@ -28,6 +28,8 @@ class PolygonImage {
         // create canvas
         this.canvas = new OffscreenCanvas(width, height);
         this.ctx = this.canvas.getContext("2d");
+        this.width = width;
+        this.height = height;
         
         // generate list of polygons
         this.polygons = [];
@@ -51,25 +53,68 @@ class PolygonImage {
 
         console.log(this.ctx.getImageData(0,0, width, height));
     }
+
+    getImageData() {
+        return this.ctx.getImageData(0,0, this.width, this.height);
+    }
 }
 
-function compare(img1, img2) {
-    
+function compare(imageData1, imageData2) {
+    // loop through each pixel in both images
+    let data1 = imageData1.data;
+    let data2 = imageData2.data;
+    let ssq = 0;
+    let sumImg1 = 0;
+    let sumImg2 = 0;
+    for (let i = 0; i < data1.length; i++) {
+        ssq += (data1[i] - data2[i])**2
+        sumImg1 += data1[i]**2
+        sumImg2 += data2[i]**2
+    }
+
+    return ssq / Math.sqrt(sumImg1 * sumImg2);
 }
 
 $(document).ready(function() {
     canvas = document.getElementById("canvas");
     context = canvas.getContext("bitmaprenderer");
-    let img = document.getElementById("image");
 
-    canvas.width = img.width;
-    canvas.height = img.height;
+    document.getElementById('file-selector').onchange = function (evt) {
+        var tgt = evt.target || window.event.srcElement,
+        files = tgt.files;
 
-    let a = new PolygonImage(img.width, img.height);
+        // FileReader support
+        if (FileReader && files && files.length) {
+            var fr = new FileReader();
+            fr.onload = function () {
+                let img = document.getElementById("image");
+                
+                img.onload = function () {
+                    let img = document.getElementById("image");
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    console.log(img.width)
+                    let a = new PolygonImage(img.width, img.height);
 
-    let m = new OffscreenCanvas(img.width, img.height);
-    let c = m.getContext('2d');
-    c.drawImage(img, 0,0);
-    console.log(c.getImageData(0,0,img.width, img.height));
-    context.transferFromImageBitmap(a.canvas.transferToImageBitmap());
+                    let m = new OffscreenCanvas(img.width, img.height);
+                    let c = m.getContext('2d');
+                    c.drawImage(img, 0,0);
+
+                    console.log(c.getImageData(0,0,img.width, img.height));
+
+                    console.log(compare(a.getImageData(), c.getImageData(0,0,img.width, img.height)));
+                    context.transferFromImageBitmap(a.canvas.transferToImageBitmap());
+                }
+
+                img.src = fr.result;
+
+                
+            }
+            fr.readAsDataURL(files[0]);
+        }
+
+        
+    }
 });
+
+
