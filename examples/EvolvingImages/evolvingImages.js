@@ -1,6 +1,7 @@
 var canvas = null;
 var context = null;
 var imageData = null;
+var instance = null;
 
 class Polygon {
     constructor(width, height) {
@@ -83,6 +84,19 @@ function evaluate(population) {
     });
 }
 
+function init() {
+    // initialize population
+    let population = [];
+    let population_size = 100;
+    for (let i = 0; i < population_size; i++) {
+        population.push(new PolygonImage(imageData.width, imageData.height));
+    }
+
+    instance = {
+        population: population,
+        population_size: population_size
+    }
+}
 
 $(document).ready(function() {
     canvas = document.getElementById("canvas");
@@ -113,10 +127,11 @@ $(document).ready(function() {
 
                     console.log(c.getImageData(0,0,img.width, img.height));
 
-                    console.log(compare(a.getImageData(), c.getImageData(0,0,img.width, img.height)));
+                    console.log(SSD(a.getImageData(), c.getImageData(0,0,img.width, img.height)));
                     context.transferFromImageBitmap(a.canvas.transferToImageBitmap());
 
-                    evaluate(null);
+                    init();
+                    evaluate(instance.population);
                 }
 
                 img.src = fr.result;
