@@ -2,21 +2,24 @@ var canvas = null;
 var context = null;
 var imageData = null;
 var instance = null;
+var generation = null;
 
 class Polygon {
     constructor(width, height) {
         this.vertices = [];
         this.width = width;
         this.height = height;
+        this.randomize();
+    }
+
+    randomize() {
+        // randomize color
         let r = Math.round(Math.random() * 255);
         let g = Math.round(Math.random() * 255);
         let b = Math.round(Math.random() * 255);
         let a = Math.random();
         this.rgba = "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
-        this.randomize();
-    }
-
-    randomize() {
+        // randomize shape
         for(let i = 0; i < 10; i++) {
             let x = (Math.random() * (this.width + 40)) - 20;
             let y = (Math.random() * (this.height + 40)) - 20;
@@ -27,23 +30,33 @@ class Polygon {
 
 class PolygonImage {
     constructor(width, height) {
-        // create canvas
-        this.canvas = new OffscreenCanvas(width, height);
-        this.ctx = this.canvas.getContext("2d");
         this.width = width;
         this.height = height;
+        this.fitness = 0;
         
         // generate list of polygons
-        this.polygons = [];
+        let polygons = [];
         let size = 100;
-        for(let i= 0; i < size; i++) {
-            this.polygons.push(new Polygon(width, height));
+        for(let i = 0; i < size; i++) {
+            polygons.push(new Polygon(width, height));
         }
 
+        this.setPolygons(polygons);
+    }
+
+    getFitness() {
+        return this.fitness;
+    }
+
+    setPolygons(polygons) {
+        // setup offscreen canvas
+        this.canvas = new OffscreenCanvas(this.width, this.height);
+        this.ctx = this.canvas.getContext("2d");
+
         // draw the polygons onto the offscreen canvas
-        for(let i = 0; i < size; i++) {
-            let vertices = this.polygons[i].vertices;
-            this.ctx.fillStyle = this.polygons[i].rgba;
+        for(let i = 0; i < polygons.length; i++) {
+            let vertices = polygons[i].vertices;
+            this.ctx.fillStyle = polygons[i].rgba;
             this.ctx.beginPath();
             this.ctx.moveTo(vertices[0].x, vertices[0].y);
             for (let j = 1; j < vertices.length; j++) {
@@ -53,8 +66,8 @@ class PolygonImage {
             this.ctx.fill();
         }
 
-        console.log(this.ctx.getImageData(0,0, width, height));
-    }
+        this.polygons = polygons;
+    } 
 
     getImageData() {
         return this.ctx.getImageData(0,0, this.width, this.height);
@@ -80,21 +93,81 @@ function SSD(imageData1, imageData2) {
 
 function evaluate(population) {
     population.forEach(function(image) {
-        image.fitness = SSD(imageData, image.getImageData());
+        image.fitness = 1 - SSD(imageData, image.getImageData());
     });
 }
 
 function init() {
     // initialize population
     let population = [];
-    let population_size = 100;
-    for (let i = 0; i < population_size; i++) {
+    let populationSize = 100;
+    for (let i = 0; i < populationSize; i++) {
         population.push(new PolygonImage(imageData.width, imageData.height));
     }
 
+    generation = 1;
+
     instance = {
         population: population,
-        population_size: population_size
+        populationSize: populationSize,
+        selectionMethod: "RWS",
+        crossoverMethod: "TPC",
+        crossoverRate: 0.8,
+        mutationMethod: "randomResetting",
+        mutationRate: 0.1,
+        elitesToKeep: 5,
+        pause: true
+    }
+}
+
+function newGeneration() {
+    // get parents
+    let selectionMethod = instance.selectionMethod;
+    let mutationRate = instance.mutationRate;
+    let crossoverMethod = instance.crossoverMethod;
+    let crossoverRate = instance.crossoverRate;
+    let elitesToKeep = instance.elitesToKeep;
+    let population = instance.population;
+
+    let genomes = null;
+    if (elitesToKeep > 0) {
+        population.sort((a, b) => a.getFitness() > b.getFitness() ? -1 : 1);
+        genomes = population.slice(0, elitesToKeep).map((v) => v.polygons);
+    }
+
+    for (var i = genomes.length; i < instance.populationSize; i++) {
+        let parents = [];
+        switch (selectionMethod) {
+            case "RWS":
+                parents = RWS(population, 2);
+                break;
+            case "SUS":
+                parents = SUS(population, 2);
+                break;
+            case "TOS":
+                parents = TOS(population, 2, 8);
+                break;
+        }
+
+        let offspring = null;
+        let parent1 = _.cloneDeep(parents[0].polygons);
+        let parent2 = _.cloneDeep(parents[1].polygons);
+        switch (crossoverMethod) {
+            case "SPC":
+                offspring = SPC(parent1, parent2, crossoverRate);
+                break;
+            case "TPC":
+                offspring = TPC(parent1, parent2, crossoverRate);
+                break;
+        }
+        
+        randomResetting(offspring, mutationRate);
+
+        genomes.push(offspring);
+    }
+
+    for(let i = 0; i < population.length; i++) {
+        population[i].setPolygons(genomes[i]);
     }
 }
 
@@ -131,7 +204,11 @@ $(document).ready(function() {
                     context.transferFromImageBitmap(a.canvas.transferToImageBitmap());
 
                     init();
-                    evaluate(instance.population);
+                    for(let i = 0; i < 10; i++) {
+                        evaluate(instance.population);
+                        updateStatistics(instance.population, generation++);
+                        newGeneration();
+                    }
                 }
 
                 img.src = fr.result;
