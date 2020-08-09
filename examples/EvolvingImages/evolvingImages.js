@@ -1,5 +1,6 @@
 var canvas = null;
 var context = null;
+var imageData = null;
 
 class Polygon {
     constructor(width, height) {
@@ -59,7 +60,8 @@ class PolygonImage {
     }
 }
 
-function compare(imageData1, imageData2) {
+// Calculate the normalized sum square difference between 2 images
+function SSD(imageData1, imageData2) {
     // loop through each pixel in both images
     let data1 = imageData1.data;
     let data2 = imageData2.data;
@@ -74,6 +76,13 @@ function compare(imageData1, imageData2) {
 
     return ssq / Math.sqrt(sumImg1 * sumImg2);
 }
+
+function evaluate(population) {
+    population.forEach(function(image) {
+        image.fitness = SSD(imageData, image.getImageData());
+    });
+}
+
 
 $(document).ready(function() {
     canvas = document.getElementById("canvas");
@@ -100,10 +109,14 @@ $(document).ready(function() {
                     let c = m.getContext('2d');
                     c.drawImage(img, 0,0);
 
+                    imageData = c.getImageData(0,0,img.width, img.height)
+
                     console.log(c.getImageData(0,0,img.width, img.height));
 
                     console.log(compare(a.getImageData(), c.getImageData(0,0,img.width, img.height)));
                     context.transferFromImageBitmap(a.canvas.transferToImageBitmap());
+
+                    evaluate(null);
                 }
 
                 img.src = fr.result;
