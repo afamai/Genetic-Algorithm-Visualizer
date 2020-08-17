@@ -9,11 +9,21 @@ for(var i = 0; i < 10; i++) {
     a.push(new Test(i));
 }
 
+// uniform mutation
+function uniformMutation(genome, mutationRate, min=0, max=1) {
+    for (let i = 0; i < genome.length; i++) {
+        let r = Math.random();
+        if (r < mutationRate) {
+            genome[i] = Math.random() * (max - min) + min;
+        }
+    }
+}
+
 // random resetting
 function randomResetting(genome, mutationRate) {
     genome.forEach(function(gene) {
         if (Math.random() < mutationRate) {
-            gene.randomize();
+            gene = Math.random();
         }
     })
 }
