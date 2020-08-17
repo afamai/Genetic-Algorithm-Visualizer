@@ -1,121 +1,97 @@
-var canvas = null;
-var context = null;
+var referenceCanvas = null;
+var referenceContext = null;
+var workingCanvas = null;
+var workingContext = null;
 var imageData = null;
 var instance = null;
-var generation = null;
-
-class Polygon {
-    constructor(width, height) {
-        this.vertices = [];
-        this.width = width;
-        this.height = height;
-        this.randomize();
-    }
-
-    randomize() {
-        // randomize color
-        let r = Math.round(Math.random() * 255);
-        let g = Math.round(Math.random() * 255);
-        let b = Math.round(Math.random() * 255);
-        let a = Math.random();
-        this.rgba = "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
-        // randomize shape
-        for(let i = 0; i < 10; i++) {
-            let x = (Math.random() * (this.width + 40)) - 20;
-            let y = (Math.random() * (this.height + 40)) - 20;
-            this.vertices.push({x: x, y: y});
-        }
-    }
-}
 
 class PolygonImage {
-    constructor(width, height) {
-        this.width = width;
-        this.height = height;
-        this.fitness = 0;
-        
-        // generate list of polygons
-        let polygons = [];
-        let size = 100;
-        for(let i = 0; i < size; i++) {
-            polygons.push(new Polygon(width, height));
-        }
-
-        this.setPolygons(polygons);
-    }
-
-    getFitness() {
-        return this.fitness;
-    }
-
-    setPolygons(polygons) {
-        // setup offscreen canvas
-        this.canvas = new OffscreenCanvas(this.width, this.height);
-        this.ctx = this.canvas.getContext("2d");
-
-        // draw the polygons onto the offscreen canvas
-        for(let i = 0; i < polygons.length; i++) {
-            let vertices = polygons[i].vertices;
-            this.ctx.fillStyle = polygons[i].rgba;
-            this.ctx.beginPath();
-            this.ctx.moveTo(vertices[0].x, vertices[0].y);
-            for (let j = 1; j < vertices.length; j++) {
-                this.ctx.lineTo(vertices[j].x, vertices[j].y);
+    constructor() {
+        // generate a random dna
+        this.genome = [];
+        for (let i = 0; i < 125; i++) {
+            // random RGBA values
+            this.genome.push(Math.random(), Math.random(), Math.random(), Math.max(Math.random() * Math.random(), 0.2));
+            // random vertices
+            let x = Math.random();
+            let y = Math.random();
+            for (let j = 0; j < 3; j++) {
+                this.genome.push(x + Math.random() - 0.5, y + Math.random() - 0.5);
             }
-            this.ctx.lineTo(vertices[0].x, vertices[0].y);
-            this.ctx.fill();
+        }
+        this.draw(workingContext);
+    }
+
+    draw(ctx) {
+        // draw polygons onto offscreen canvas to obtain image data
+        let width = workingCanvas.width;
+        let height = workingCanvas.height;
+        ctx.fillStyle = 'rgb(0,0,0)';
+        ctx.fillRect(0, 0, width, height);
+
+        for(let i = 0; i < this.genome.length; i += 10) {
+            ctx.fillStyle = 'rgba(' +
+                ((this.genome[i] * 255) >> 0) + ',' +
+                ((this.genome[i + 1] * 255) >> 0) + ',' +
+                ((this.genome[i + 2] * 255) >> 0) + ',' +
+                this.genome[i + 3] + ')';
+            
+            ctx.beginPath();
+            ctx.moveTo(this.genome[i + 4] * width, this.genome[i + 5] * height);
+            for (let j = 6; j < 9; j += 2) {
+                ctx.lineTo(this.genome[i + j] * width, this.genome[i + j + 1] * height);
+            }
+            ctx.lineTo(this.genome[i + 4] * width, this.genome[i + 5] * height);
+            ctx.closePath();
+            ctx.fill();
         }
 
-        this.polygons = polygons;
-    } 
-
-    getImageData() {
-        return this.ctx.getImageData(0,0, this.width, this.height);
+        this.imageData = ctx.getImageData(0,0, width, height);
     }
 }
 
-// Calculate the normalized sum square difference between 2 images
-function SSD(imageData1, imageData2) {
+// Calculate the sum square difference between 2 images
+function similarity(imageData1, imageData2) {
     // loop through each pixel in both images
     let data1 = imageData1.data;
     let data2 = imageData2.data;
     let ssq = 0;
-    let sumImg1 = 0;
-    let sumImg2 = 0;
     for (let i = 0; i < data1.length; i++) {
         ssq += (data1[i] - data2[i])**2
-        sumImg1 += data1[i]**2
-        sumImg2 += data2[i]**2
     }
 
-    return ssq / Math.sqrt(sumImg1 * sumImg2);
+    return 1 - ssq / (data1.width * data1.height * 4 * 256 * 256);
 }
 
 function evaluate(population) {
+    let best = population[0];
     population.forEach(function(image) {
-        image.fitness = 1 - SSD(imageData, image.getImageData());
+        image.fitness = 1 - SSD(imageData, image.imageData);
+        if (image.fitness > best.getFitness()) {
+            best = image;
+        }
     });
+    //context.drawImage(best.canvas,0,0);
 }
 
 function init() {
     // initialize population
     let population = [];
-    let populationSize = 100;
+    let populationSize = 50;
     for (let i = 0; i < populationSize; i++) {
         population.push(new PolygonImage(imageData.width, imageData.height));
     }
 
-    generation = 1;
-
     instance = {
+        generation: 1,
         population: population,
         populationSize: populationSize,
         selectionMethod: "RWS",
         crossoverMethod: "TPC",
         crossoverRate: 0.8,
         mutationMethod: "randomResetting",
-        mutationRate: 0.1,
-        elitesToKeep: 5,
+        mutationRate: 0.5,
+        elitesToKeep: 1,
         pause: true
     }
 }
@@ -129,7 +105,7 @@ function newGeneration() {
     let elitesToKeep = instance.elitesToKeep;
     let population = instance.population;
 
-    let genomes = null;
+    let genomes = [];
     if (elitesToKeep > 0) {
         population.sort((a, b) => a.getFitness() > b.getFitness() ? -1 : 1);
         genomes = population.slice(0, elitesToKeep).map((v) => v.polygons);
@@ -171,9 +147,21 @@ function newGeneration() {
     }
 }
 
+function run() {
+    evaluate(instance.population);
+    updateStatistics(instance.population, instance.generation++, true);
+    newGeneration();
+    if(instance.generation < 4000) 
+        setTimeout(function() {
+            run();
+        }, 0);
+}
+
 $(document).ready(function() {
     canvas = document.getElementById("canvas");
-    context = canvas.getContext("bitmaprenderer");
+    context = canvas.getContext("2d");
+
+
 
     document.getElementById('file-selector').onchange = function (evt) {
         var tgt = evt.target || window.event.srcElement,
@@ -189,26 +177,26 @@ $(document).ready(function() {
                     let img = document.getElementById("image");
                     canvas.width = img.width;
                     canvas.height = img.height;
-                    console.log(img.width)
-                    let a = new PolygonImage(img.width, img.height);
+
+                    workingCanvas = new OffscreenCanvas(img.width, img.height);
+                    workingContext = workingCanvas.getContext('2d');
 
                     let m = new OffscreenCanvas(img.width, img.height);
                     let c = m.getContext('2d');
                     c.drawImage(img, 0,0);
-
                     imageData = c.getImageData(0,0,img.width, img.height)
 
-                    console.log(c.getImageData(0,0,img.width, img.height));
-
-                    console.log(SSD(a.getImageData(), c.getImageData(0,0,img.width, img.height)));
-                    context.transferFromImageBitmap(a.canvas.transferToImageBitmap());
-
-                    init();
-                    for(let i = 0; i < 10; i++) {
-                        evaluate(instance.population);
-                        updateStatistics(instance.population, generation++);
-                        newGeneration();
-                    }
+                    let test = new PolygonImage();
+                    test.draw(context);
+                    
+                    // init();
+                    // run();
+                    // for(let i = 0; i < 10; i++) {
+                    //     evaluate(instance.population);
+                    //     updateStatistics(instance.population, generation++);
+                    //     newGeneration();
+                    // }
+                    
                 }
 
                 img.src = fr.result;
