@@ -1,19 +1,28 @@
-class Test {
-    constructor(x) {
-        this.x = x;
-    }
+// Standard Normal variate using Box-Muller transform.
+function randn_bm() {
+    var u = 0, v = 0;
+    while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
+    while(v === 0) v = Math.random();
+    return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
 }
 
-a = [];
-for(var i = 0; i < 10; i++) {
-    a.push(new Test(i));
+function gaussianMutation(genome, mutationRate, min=-1, max=1) {
+    for (let i = 0; i < genome.length; i++) {
+        if (Math.random() < mutationRate) {
+            genome[i] += randn_bm() * 0.2 - 0.1;
+            if (genome[i] > max)
+                genome[i] = max;
+
+            if (genome[i] < min)
+                genome[i] = min;
+        }
+    }
 }
 
 // uniform mutation
 function uniformMutation(genome, mutationRate, min=0, max=1) {
     for (let i = 0; i < genome.length; i++) {
-        let r = Math.random();
-        if (r < mutationRate) {
+        if (Math.random() < mutationRate) {
             genome[i] = Math.random() * (max - min) + min;
         }
     }
@@ -104,19 +113,19 @@ function TOS(population, amount, k) {
         // shuffle the population
         let shuffle = population.sort(() => 0.5 - Math.random());
         // select the best individual
-        selection.push(shuffle.slice(0, k).sort((a, b) => a.getFitness() > b.getFitness() ? -1 : 1)[0]);
+        selection.push(shuffle.slice(0, k).sort((a, b) => a.fitness > b.fitness ? -1 : 1)[0]);
     }
     return selection;
 }
 
 function RWS(population, amount) {
-    let totalFitness = population.reduce((acc, cv) => acc + cv.getFitness(), 0);
+    let totalFitness = population.reduce((acc, cv) => acc + cv.fitness, 0);
     let selection = [];
     for (var i = 0; i < amount; i++) {
         let point = Math.random() * totalFitness;
         let sum = 0
         for (var j = 0; j < population.length; j++) {
-            sum += population[j].getFitness();
+            sum += population[j].fitness;
             if (point < sum) {
                 selection.push(population[j]);
                 break;
@@ -127,12 +136,12 @@ function RWS(population, amount) {
 }
 
 function SUS(population, amount) {
-    let totalFitness = population.reduce((acc, cv) => acc + cv.getFitness(), 0);
+    let totalFitness = population.reduce((acc, cv) => acc + cv.fitness, 0);
     let delta = totalFitness / amount;
     let point = Math.random() * delta;
     let selection = [];
     
-    let sum = population[0].getFitness();
+    let sum = population[0].fitness;
     for (var i = 0; i < amount; i++) {
         for (var j = 1; j < population.length; j++) {
             if (point < sum) {
@@ -140,7 +149,7 @@ function SUS(population, amount) {
                 point += delta;
                 break;
             }
-            sum += population[i].getFitness();
+            sum += population[i].fitness;
         }
     }
 
