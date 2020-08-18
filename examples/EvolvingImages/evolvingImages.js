@@ -1,5 +1,5 @@
-var referenceCanvas = null;
-var referenceContext = null;
+var canvas = null;
+var context = null;
 var workingCanvas = null;
 var workingContext = null;
 var imageData = null;
@@ -28,7 +28,6 @@ class PolygonImage {
         let height = workingCanvas.height;
         ctx.fillStyle = 'rgb(0,0,0)';
         ctx.fillRect(0, 0, width, height);
-
         for(let i = 0; i < this.genome.length; i += 10) {
             ctx.fillStyle = 'rgba(' +
                 ((this.genome[i] * 255) >> 0) + ',' +
@@ -41,11 +40,10 @@ class PolygonImage {
             for (let j = 6; j < 9; j += 2) {
                 ctx.lineTo(this.genome[i + j] * width, this.genome[i + j + 1] * height);
             }
-            ctx.lineTo(this.genome[i + 4] * width, this.genome[i + 5] * height);
+            //ctx.lineTo(this.genome[i + 4] * width, this.genome[i + 5] * height);
             ctx.closePath();
             ctx.fill();
         }
-
         this.imageData = ctx.getImageData(0,0, width, height);
     }
 }
@@ -57,10 +55,10 @@ function similarity(imageData1, imageData2) {
     let data2 = imageData2.data;
     let ssq = 0;
     for (let i = 0; i < data1.length; i++) {
-        ssq += (data1[i] - data2[i])**2
+        ssq += (data1[i] - data2[i])**2;
     }
 
-    return 1 - ssq / (data1.width * data1.height * 4 * 256 * 256);
+    return 1 - ssq / (data1.length * 256 * 256);
 }
 
 function evaluate(population) {
@@ -90,7 +88,7 @@ function init() {
         crossoverMethod: "TPC",
         crossoverRate: 0.8,
         mutationMethod: "randomResetting",
-        mutationRate: 0.5,
+        mutationRate: 0.01,
         elitesToKeep: 1,
         pause: true
     }
@@ -105,50 +103,72 @@ function newGeneration() {
     let elitesToKeep = instance.elitesToKeep;
     let population = instance.population;
 
-    let genomes = [];
-    if (elitesToKeep > 0) {
-        population.sort((a, b) => a.getFitness() > b.getFitness() ? -1 : 1);
-        genomes = population.slice(0, elitesToKeep).map((v) => v.polygons);
-    }
+    population.sort((a, b) => a.fitness > b.fitness ? -1 : 1);
+    let genomes = [population[0].genome];
+
+    let parent1 = _.cloneDeep(population[0].genome);
+    let parent2 = _.cloneDeep(population[1].genome);
 
     for (var i = genomes.length; i < instance.populationSize; i++) {
-        let parents = [];
-        switch (selectionMethod) {
-            case "RWS":
-                parents = RWS(population, 2);
-                break;
-            case "SUS":
-                parents = SUS(population, 2);
-                break;
-            case "TOS":
-                parents = TOS(population, 2, 8);
-                break;
-        }
+        // let parents = [];
+        // switch (selectionMethod) {
+        //     case "RWS":
+        //         parents = RWS(population, 2);
+        //         break;
+        //     case "SUS":
+        //         parents = SUS(population, 2);
+        //         break;
+        //     case "TOS":
+        //         parents = TOS(population, 2, 8);
+        //         break;
+        // }
 
-        let offspring = null;
-        let parent1 = _.cloneDeep(parents[0].polygons);
-        let parent2 = _.cloneDeep(parents[1].polygons);
-        switch (crossoverMethod) {
-            case "SPC":
-                offspring = SPC(parent1, parent2, crossoverRate);
-                break;
-            case "TPC":
-                offspring = TPC(parent1, parent2, crossoverRate);
-                break;
-        }
-        
-        randomResetting(offspring, mutationRate);
+        // let offspring = null;
+        // switch (crossoverMethod) {
+        //     case "SPC":
+        //         offspring = SPC(parent1, parent2, crossoverRate);
+        //         break;
+        //     case "TPC":
+        //         offspring = TPC(parent1, parent2, crossoverRate);
+        //         break;
+        // }
+        offspring = UC(parent1, parent2, crossoverRate, 10);
+        gaussianMutation(offspring, mutationRate);
 
         genomes.push(offspring);
     }
 
     for(let i = 0; i < population.length; i++) {
-        population[i].setPolygons(genomes[i]);
+        population[i].genome = genomes[i];
+        population[i].draw(workingContext);
     }
+    
+}
+
+function iterate() {
+    // evaluate the population
+    let population = instance.population;
+    let best = population[0];
+    let average = 0;
+    for (let i = 0; i < population.length; i++) {
+        let fitness = similarity(imageData, population[i].imageData);
+        average += fitness;
+        population[i].fitness = fitness;
+        if (fitness > best.fitness) {
+            best = population[i];
+        }
+    }
+    best.draw(context);
+    average = average / instance.populationSize;
+    // updateStatistics(population, instance.generation++, true);
+
+    // update the text for current generation
+    $("#current-stat").html("Generation: " + instance.generation++ + "<br>Best Fitness: " + best.fitness + "<br>Average Fitness: " + average);
+    newGeneration();
 }
 
 function run() {
-    evaluate(instance.population);
+    
     updateStatistics(instance.population, instance.generation++, true);
     newGeneration();
     if(instance.generation < 4000) 
@@ -189,6 +209,9 @@ $(document).ready(function() {
                     let test = new PolygonImage();
                     test.draw(context);
                     
+                    init();
+                    //iterate();
+                    setInterval(iterate, 0);
                     // init();
                     // run();
                     // for(let i = 0; i < 10; i++) {

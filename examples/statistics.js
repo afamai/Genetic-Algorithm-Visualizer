@@ -30,11 +30,11 @@ var config = {
 function updateStatistics(population, generation, nochart=false) {
     // get the best genome and calculate the average fitness
     let totalFitness = 0;
-    let bestFitness = population[0].getFitness();
+    let bestFitness = population[0].fitness;
     population.forEach(function(genome) {
-        totalFitness += genome.getFitness();
-        if (genome.getFitness() > bestFitness) {
-            bestFitness = genome.getFitness();
+        totalFitness += genome.fitness;
+        if (genome.fitness > bestFitness) {
+            bestFitness = genome.fitness;
         }
     })
 
