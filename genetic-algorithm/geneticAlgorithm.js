@@ -6,10 +6,10 @@ function randn_bm() {
     return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
 }
 
-function gaussianMutation(genome, mutationRate, min=-1, max=1) {
+function gaussianMutation(genome, mutationRate, min=0, max=1) {
     for (let i = 0; i < genome.length; i++) {
         if (Math.random() < mutationRate) {
-            genome[i] += randn_bm() * 0.2 - 0.1;
+            genome[i] += randn_bm() * 0.1;
             if (genome[i] > max)
                 genome[i] = max;
 
@@ -105,6 +105,19 @@ function TPC(parent1, parent2, crossoverRate) {
         return parent1.slice(0, index1).concat(parent2.slice(index1, index2)).concat(parent1.slice(index2));
     }
     return parent1
+}
+
+// Uniform crossover
+function UC(parent1, parent2, crossoverRate, geneLength=1) {
+    let offspring = [];
+    if (Math.random() < crossoverRate) {
+        for (let i = 0; i < parent1.length; i += geneLength) {
+            let inheritedGene = (Math.random() < 0.5) ? parent1 : parent2;
+            offspring = offspring.concat(inheritedGene.slice(i, i + geneLength));
+        }
+        return offspring;
+    }
+    return parent1;
 }
 
 function TOS(population, amount, k) {
