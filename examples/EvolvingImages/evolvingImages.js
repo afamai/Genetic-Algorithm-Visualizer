@@ -181,7 +181,10 @@ $(document).ready(function() {
     canvas = document.getElementById("canvas");
     context = canvas.getContext("2d");
 
-
+    $(".form-control-range").on('input', function(evt) {
+        let formGroup = $(evt.target).closest("div.form-group");
+        $(formGroup).find("p.slider-value").text(evt.target.value);
+    });
 
     document.getElementById('file-selector').onchange = function (evt) {
         var tgt = evt.target || window.event.srcElement,

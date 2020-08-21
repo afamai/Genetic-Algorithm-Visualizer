@@ -34,66 +34,82 @@
                         <!-- <img src="https://afamai.github.io/Genetic-Algorithm-Visualizer/img/starrynight.jpg"> -->
                         <!-- <div style="width:100px;height:100px;background-color: red"></div> -->
                     </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        DESCRIPTION
+                    </div>
                     <div class="pt-2 col">
-                        <form>
-                            <h5>Play Settings</h5>
-                            <div class="row mb-3">
-                                <button id="play" type="button" class="btn btn-light ml-3 mr-2 disabled" disabled><i class="fas fa-play"></i></button>
-                                <button id="pause" type="button" class="btn btn-light mr-2"><i class="fas fa-pause"></i></button>
-                                <button id="fast-forward" type="button" class="btn btn-light mr-2"><i class="fas fa-fast-forward"></i></button>
-                                <p id="speed" class="mb-0">x1</p>
+                        <nav>
+                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                <a class="nav-item nav-link active" id="nav-config-tab" data-toggle="tab" href="#nav-config" role="tab" aria-controls="nav-config" aria-selected="true">Configuration</a>
+                                <a class="nav-item nav-link" id="nav-analytics-tab" data-toggle="tab" href="#nav-analytics" role="tab" aria-controls="nav-analytics" aria-selected="false">Analytics</a>
                             </div>
-                            <h5>Algorithm Parameters</h5>
-                            <div class="form-group form-row">
-                                <label for="population" class="col">Population Size:</label>
-                                <input type="number" id="population" class="col form-control form-control-sm">
-                                <div id="population-error" class="invalid-feedback"></div>
+                        </nav>
+                        <div class="tab-content" id="nav-tabContent">
+                            <div class="tab-pane fade show active" id="nav-config" role="tabpanel" aria-labelledby="nav-config-tab">
+                                <form class="mt-3">
+                                    <h5>Algorithm Parameters</h5>
+                                    <div class="form-group form-row mb-0">
+                                        <label class="col" for="population">Population</label>
+                                        <div class="col">
+                                            <input type="range" class="form-control-range" id="population-slider">
+                                        </div>
+                                        <p id="population" class="slider-value col-1"></p>
+                                    </div>
+                                    <div class="form-group form-row">
+                                        <label for="selection-method" class="col">Selection Method:</label>
+                                        <select id="selection-method" class="col form-control form-control-sm">
+                                            <option value="RWS">Roulette Wheel Selection</option>
+                                            <option value="SUS">Stochastic Universal Sampling</option>
+                                            <option value="TOS">Tournament Selection</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group form-row">
+                                        <label for="crossover-method" class="col">Crossover Method:</label>
+                                        <select id="crossover-method" class="col form-control form-control-sm">
+                                            <option value="SPC">Single Point Crossover</option>
+                                            <option value="TPC">Two Point Crossover</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group form-row mb-0">
+                                        <label for="crossover-rate" class="col">Crossover Rate</label>
+                                        <div class="col">
+                                            <input type="range" class="form-control-range" id="crossover-rate-slider">
+                                        </div>
+                                        <p id="crossover-rate" class="slider-value col-1"></p>
+                                    </div>
+                                    <div class="form-group form-row">
+                                        <label for="mutation-method" class="col">Mutation Method:</label>
+                                        <select id="mutation-method" class="col form-control form-control-sm">
+                                            <option value="randomResetting">Random Resetting</option>
+                                            <option value="swapMutation">Swap Mutation</option>
+                                            <option value="scrambleMutation">Scramble Mutation</option>
+                                            <option value="inversionMutation">Inversion Mutation</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group form-row mb-0">
+                                        <label for="mutation-rate" class="col">Mutation Rate</label>
+                                        <div class="col">
+                                            <input type="range" class="form-control-range" id="mutation-rate-slider">
+                                        </div>
+                                        <p id="mutation-rate" class="slider-value col-1"></p>
+                                    </div>
+                                    <div class="form-group form-row">
+                                        <label for="elitism" class="col">Elitism</label>
+                                        <div class="col">
+                                            <input type="checkbox" class="form-check-input" id="elitism">
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-inline">
+                                        <button id="apply" type="button" class="btn btn-primary mr-3">Apply</button>
+                                        <button id="new-run" type="button" class="btn btn-primary">New Run</button>
+                                    </div>
+                                    <div id="alert" role="alert"></div>
+                                </form>
                             </div>
-                            <div class="form-group form-row">
-                                <label for="selection-method" class="col">Selection Method:</label>
-                                <select id="selection-method" class="col form-control form-control-sm">
-                                    <option value="RWS">Roulette Wheel Selection</option>
-                                    <option value="SUS">Stochastic Universal Sampling</option>
-                                    <option value="TOS">Tournament Selection</option>
-                                </select>
-                            </div>
-                            <div class="form-group form-row">
-                                <label for="crossover-method" class="col">Crossover Method:</label>
-                                <select id="crossover-method" class="col form-control form-control-sm">
-                                    <option value="SPC">Single Point Crossover</option>
-                                    <option value="TPC">Two Point Crossover</option>
-                                </select>
-                            </div>
-                            <div class="form-group form-row">
-                                <label for="crossover-rate" class="col">Crossover Rate:</label>
-                                <input type="number" id="crossover-rate" class="col form-control form-control-sm" step="0.01">
-                                <div id="crossover-rate-error" class="invalid-feedback"></div>
-                            </div>
-                            <div class="form-group form-row">
-                                <label for="mutation-method" class="col">Mutation Method:</label>
-                                <select id="mutation-method" class="col form-control form-control-sm">
-                                    <option value="randomResetting">Random Resetting</option>
-                                    <option value="swapMutation">Swap Mutation</option>
-                                    <option value="scrambleMutation">Scramble Mutation</option>
-                                    <option value="inversionMutation">Inversion Mutation</option>
-                                </select>
-                            </div>
-                            <div class="form-group form-row">
-                                <label for="mutation-rate" class="col">Mutation Rate:</label>
-                                <input type="number" id="mutation-rate" class="col form-control form-control-sm" step="0.01">
-                                <div id="mutation-rate-error" class="invalid-feedback"></div>
-                            </div>
-                            <div class="form-group form-row">
-                                <label for="elite-amount" class="col">Elites to Keep:</label>
-                                <input type="number" id="elite-amount" class="col form-control form-control-sm">
-                                <div id="elite-amount-error" class="invalid-feedback"></div>
-                            </div>
-                            <div class="form-group form-inline">
-                                <button id="apply" type="button" class="btn btn-primary mr-3">Apply</button>
-                                <button id="new-run" type="button" class="btn btn-primary">New Run</button>
-                            </div>
-                            <div id="alert" role="alert"></div>
-                        </form>
+                            <div class="tab-pane fade" id="nav-analytics" role="tabpanel" aria-labelledby="nav-analytics-tab">...</div>
+                        </div>
                     </div>
                 </div>
                 <div id="statistics">
