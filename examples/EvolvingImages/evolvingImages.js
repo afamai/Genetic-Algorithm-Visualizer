@@ -1,8 +1,8 @@
-var canvas = null;
-var context = null;
-var workingCanvas = null;
-var workingContext = null;
-var imageData = null;
+var outputCanvas = null;
+var outputContext = null;
+var offscreenCanvas = null;
+var offscreenContext = null;
+var referenceData = null;
 var instance = null;
 
 class PolygonImage {
@@ -19,13 +19,13 @@ class PolygonImage {
                 this.genome.push(x + Math.random() - 0.5, y + Math.random() - 0.5);
             }
         }
-        this.draw(workingContext);
+        this.draw(offscreenContext);
     }
 
     draw(ctx) {
         // draw polygons onto offscreen canvas to obtain image data
-        let width = workingCanvas.width;
-        let height = workingCanvas.height;
+        let width = offscreenCanvas.width;
+        let height = offscreenCanvas.height;
         ctx.fillStyle = 'rgb(0,0,0)';
         ctx.fillRect(0, 0, width, height);
         for(let i = 0; i < this.genome.length; i += 10) {
@@ -44,15 +44,15 @@ class PolygonImage {
             ctx.closePath();
             ctx.fill();
         }
-        this.imageData = ctx.getImageData(0,0, width, height);
+        this.referenceData = ctx.getImageData(0,0, width, height);
     }
 }
 
 // Calculate the sum square difference between 2 images
-function similarity(imageData1, imageData2) {
+function similarity(referenceData1, referenceData2) {
     // loop through each pixel in both images
-    let data1 = imageData1.data;
-    let data2 = imageData2.data;
+    let data1 = referenceData1.data;
+    let data2 = referenceData2.data;
     let ssq = 0;
     for (let i = 0; i < data1.length; i++) {
         ssq += (data1[i] - data2[i])**2;
@@ -64,7 +64,7 @@ function similarity(imageData1, imageData2) {
 function evaluate(population) {
     let best = population[0];
     population.forEach(function(image) {
-        image.fitness = 1 - SSD(imageData, image.imageData);
+        image.fitness = 1 - SSD(referenceData, image.referenceData);
         if (image.fitness > best.getFitness()) {
             best = image;
         }
@@ -73,13 +73,29 @@ function evaluate(population) {
 }
 
 function init() {
+    // initialize global variables
+    outputCanvas = document.getElementById("output");
+    outputContext = outputCanvas.getContext("2d");
+
+    // load reference image data
+    let img = $("#reference")[0];
+    offscreenCanvas = new OffscreenCanvas(img.width, img.height);
+    offscreenContext = offscreenCanvas.getContext('2d');
+    offscreenContext.drawImage(img, 0,0);
+    referenceData = offscreenContext.getImageData(0,0,img.width, img.height);
+
+    // Adjust output canvas dimensions
+    outputCanvas.width = img.width;
+    outputCanvas.height = img.height;
+
     // initialize population
     let population = [];
     let populationSize = 50;
     for (let i = 0; i < populationSize; i++) {
-        population.push(new PolygonImage(imageData.width, imageData.height));
+        population.push(new PolygonImage(referenceData.width, referenceData.height));
     }
 
+    // initialize instance
     instance = {
         generation: 1,
         population: population,
@@ -92,6 +108,15 @@ function init() {
         elitesToKeep: 1,
         pause: true
     }
+
+    // initialize the ui
+    $("#population").text(instance.populationSize);
+    $("#selection-method").val(instance.selectionMethod);
+    $("#crossover-method").val(instance.crossoverMethod);
+    $("#crossover-rate").text(instance.crossoverRate);
+    $("#mutation-method").val(instance.mutationMethod);
+    $("#mutation-rate").text(instance.mutationRate);
+    $("#elitism").val(instance.elitism);
 }
 
 function newGeneration() {
@@ -140,7 +165,7 @@ function newGeneration() {
 
     for(let i = 0; i < population.length; i++) {
         population[i].genome = genomes[i];
-        population[i].draw(workingContext);
+        population[i].draw(offscreenContext);
     }
     
 }
@@ -151,7 +176,7 @@ function iterate() {
     let best = population[0];
     let average = 0;
     for (let i = 0; i < population.length; i++) {
-        let fitness = similarity(imageData, population[i].imageData);
+        let fitness = similarity(referenceData, population[i].referenceData);
         average += fitness;
         population[i].fitness = fitness;
         if (fitness > best.fitness) {
@@ -178,62 +203,60 @@ function run() {
 }
 
 $(document).ready(function() {
-    canvas = document.getElementById("canvas");
-    context = canvas.getContext("2d");
+    
+    init();
 
+    // input event to update slider values
     $(".form-control-range").on('input', function(evt) {
         let formGroup = $(evt.target).closest("div.form-group");
         $(formGroup).find("p.slider-value").text(evt.target.value);
     });
 
-    document.getElementById('file-selector').onchange = function (evt) {
-        var tgt = evt.target || window.event.srcElement,
-        files = tgt.files;
+    // document.getElementById('file-selector').onchange = function (evt) {
+    //     var tgt = evt.target || window.event.srcElement,
+    //     files = tgt.files;
 
-        // FileReader support
-        if (FileReader && files && files.length) {
-            var fr = new FileReader();
-            fr.onload = function () {
-                let img = document.getElementById("image");
+    //     // FileReader support
+    //     if (FileReader && files && files.length) {
+    //         var fr = new FileReader();
+    //         fr.onload = function () {
+    //             let img = document.getElementById("image");
                 
-                img.onload = function () {
-                    let img = document.getElementById("image");
-                    canvas.width = img.width;
-                    canvas.height = img.height;
+    //             img.onload = function () {
+    //                 let img = document.getElementById("image");
+    //                 canvas.width = img.width;
+    //                 canvas.height = img.height;
 
-                    workingCanvas = new OffscreenCanvas(img.width, img.height);
-                    workingContext = workingCanvas.getContext('2d');
+    //                 offscreenCanvas = new OffscreenCanvas(img.width, img.height);
+    //                 offscreenContext = offscreenCanvas.getContext('2d');
 
-                    let m = new OffscreenCanvas(img.width, img.height);
-                    let c = m.getContext('2d');
-                    c.drawImage(img, 0,0);
-                    imageData = c.getImageData(0,0,img.width, img.height)
+    //                 let m = new OffscreenCanvas(img.width, img.height);
+    //                 let c = m.getContext('2d');
+    //                 c.drawImage(img, 0,0);
+    //                 referenceData = c.getreferenceData(0,0,img.width, img.height)
 
-                    let test = new PolygonImage();
-                    test.draw(context);
+    //                 let test = new PolygonImage();
+    //                 test.draw(context);
                     
-                    init();
-                    //iterate();
-                    setInterval(iterate, 0);
-                    // init();
-                    // run();
-                    // for(let i = 0; i < 10; i++) {
-                    //     evaluate(instance.population);
-                    //     updateStatistics(instance.population, generation++);
-                    //     newGeneration();
-                    // }
+    //                 init();
+    //                 //iterate();
+    //                 setInterval(iterate, 0);
+    //                 // init();
+    //                 // run();
+    //                 // for(let i = 0; i < 10; i++) {
+    //                 //     evaluate(instance.population);
+    //                 //     updateStatistics(instance.population, generation++);
+    //                 //     newGeneration();
+    //                 // }
                     
-                }
+    //             }
 
-                img.src = fr.result;
+    //             img.src = fr.result;
 
                 
-            }
-            fr.readAsDataURL(files[0]);
-        }
-
-        
-    }
+    //         }
+    //         fr.readAsDataURL(files[0]);
+    //     }
 });
 
 
