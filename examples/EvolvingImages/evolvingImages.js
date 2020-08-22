@@ -111,11 +111,14 @@ function init() {
 
     // initialize the ui
     $("#population").text(instance.populationSize);
+    $("#population-slider").val(instance.populationSize);
     $("#selection-method").val(instance.selectionMethod);
     $("#crossover-method").val(instance.crossoverMethod);
     $("#crossover-rate").text(instance.crossoverRate);
+    $("#crossover-rate-slider").val(instance.crossoverRate);
     $("#mutation-method").val(instance.mutationMethod);
     $("#mutation-rate").text(instance.mutationRate);
+    $("#mutation-rate-slider").val(instance.mutationRate);
     $("#elitism").val(instance.elitism);
 }
 

@@ -50,14 +50,14 @@
                                 <form class="mt-3">
                                     <h5>Algorithm Parameters</h5>
                                     <div class="form-group form-row mb-0">
-                                        <label class="col" for="population">Population</label>
+                                        <label class="col" for="population">Population Size</label>
                                         <div class="col">
-                                            <input type="range" class="form-control-range" id="population-slider">
+                                            <input type="range" class="form-control-range" id="population-slider" min="1" max="300" step="1">
                                         </div>
                                         <p id="population" class="slider-value col-1"></p>
                                     </div>
                                     <div class="form-group form-row">
-                                        <label for="selection-method" class="col">Selection Method:</label>
+                                        <label for="selection-method" class="col">Selection Method</label>
                                         <select id="selection-method" class="col form-control form-control-sm">
                                             <option value="RWS">Roulette Wheel Selection</option>
                                             <option value="SUS">Stochastic Universal Sampling</option>
@@ -65,7 +65,7 @@
                                         </select>
                                     </div>
                                     <div class="form-group form-row">
-                                        <label for="crossover-method" class="col">Crossover Method:</label>
+                                        <label for="crossover-method" class="col">Crossover Method</label>
                                         <select id="crossover-method" class="col form-control form-control-sm">
                                             <option value="SPC">Single Point Crossover</option>
                                             <option value="TPC">Two Point Crossover</option>
@@ -74,12 +74,12 @@
                                     <div class="form-group form-row mb-0">
                                         <label for="crossover-rate" class="col">Crossover Rate</label>
                                         <div class="col">
-                                            <input type="range" class="form-control-range" id="crossover-rate-slider">
+                                            <input type="range" class="form-control-range" id="crossover-rate-slider" min="0" max="1" step="0.01">
                                         </div>
                                         <p id="crossover-rate" class="slider-value col-1"></p>
                                     </div>
                                     <div class="form-group form-row">
-                                        <label for="mutation-method" class="col">Mutation Method:</label>
+                                        <label for="mutation-method" class="col">Mutation Method</label>
                                         <select id="mutation-method" class="col form-control form-control-sm">
                                             <option value="randomResetting">Random Resetting</option>
                                             <option value="swapMutation">Swap Mutation</option>
@@ -90,7 +90,7 @@
                                     <div class="form-group form-row mb-0">
                                         <label for="mutation-rate" class="col">Mutation Rate</label>
                                         <div class="col">
-                                            <input type="range" class="form-control-range" id="mutation-rate-slider">
+                                            <input type="range" class="form-control-range" id="mutation-rate-slider" min="0" max="1" step="0.01">
                                         </div>
                                         <p id="mutation-rate" class="slider-value col-1"></p>
                                     </div>
