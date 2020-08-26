@@ -25,8 +25,8 @@ class PolygonImage {
 
     draw(ctx) {
         // draw polygons onto offscreen canvas to obtain image data
-        let width = offscreenCanvas.width;
-        let height = offscreenCanvas.height;
+        let width = ctx.canvas.width;
+        let height = ctx.canvas.height;
         ctx.fillStyle = 'rgb(0,0,0)';
         ctx.fillRect(0, 0, width, height);
         for(let i = 0; i < this.genome.length; i += 10) {
@@ -89,10 +89,13 @@ function init() {
 
     // load reference image data
     let img = $("#reference")[0];
-    offscreenCanvas = new OffscreenCanvas(img.width, img.height);
+    let width = Math.round(img.width * 0.1);
+    let height = Math.round(img.height *0.1);
+    console.log(width, height)
+    offscreenCanvas = new OffscreenCanvas(width, height);
     offscreenContext = offscreenCanvas.getContext('2d');
-    offscreenContext.drawImage(img,0,0);
-    referenceData = offscreenContext.getImageData(0,0,img.width, img.height);
+    offscreenContext.drawImage(img, 0, 0, width, height);
+    referenceData = offscreenContext.getImageData(0, 0, width, height);
 
     // Adjust output canvas dimensions
     outputCanvas.width = img.width;
@@ -112,9 +115,9 @@ function init() {
         selectionMethod: "TOS",
         crossoverMethod: "UC",
         crossoverRate: 0.8,
-        mutationMethod: "gaussianMutation",
+        mutationMethod: "uniformMutation",
         mutationRate: 0.01,
-        elitesToKeep: 1,
+        elitism: true,
         pause: true
     }
 
@@ -128,7 +131,7 @@ function init() {
     $("#mutation-method").val(instance.mutationMethod);
     $("#mutation-rate").text(instance.mutationRate);
     $("#mutation-rate-slider").val(instance.mutationRate);
-    $("#elitism").val(instance.elitism);
+    $("#elitism").prop('checked', instance.elitism);
 
     // input event to update slider values
     $(".form-control-range").on('input', function(evt) {
@@ -181,11 +184,15 @@ function newGeneration() {
     let crossoverRate = instance.crossoverRate;
     let mutationMethod = instance.mutationMethod;
     let mutationRate = instance.mutationRate;
-    let elitesToKeep = instance.elitesToKeep;
+    let elitism = instance.elitism;
     let population = instance.population;
 
-    population.sort((a, b) => a.fitness > b.fitness ? -1 : 1);
-    let genomes = [population[0].genome];
+    let genomes = [];
+    // if elitism is enabled, place the best genome into the next generation
+    if (elitism) {
+        population.sort((a, b) => a.fitness > b.fitness ? -1 : 1);
+        genomes.push(population[0].genome);
+    }
 
     for (var i = genomes.length; i < instance.populationSize; i++) {
         let parents = [];
@@ -220,6 +227,9 @@ function newGeneration() {
         switch (mutationMethod) {
             case "gaussianMutation":
                 gaussianMutation(offspring, mutationRate);
+                break;
+            case "uniformMutation":
+                uniformMutation(offspring, mutationRate);
                 break;
         }
 
