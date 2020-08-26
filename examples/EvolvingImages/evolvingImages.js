@@ -4,6 +4,7 @@ var offscreenCanvas = null;
 var offscreenContext = null;
 var referenceData = null;
 var instance = null;
+var interval = null;
 
 class PolygonImage {
     constructor() {
@@ -72,6 +73,14 @@ function evaluate(population) {
     //context.drawImage(best.canvas,0,0);
 }
 
+function createPopulation(size) {
+    let population = [];
+    for (let i = 0; i < size; i++) {
+        population.push(new PolygonImage(referenceData.width, referenceData.height));
+    }
+    return population;
+} 
+
 function init() {
     // initialize global variables
     outputCanvas = document.getElementById("output");
@@ -89,11 +98,9 @@ function init() {
     outputCanvas.height = img.height;
 
     // initialize population
-    let population = [];
     let populationSize = 50;
-    for (let i = 0; i < populationSize; i++) {
-        population.push(new PolygonImage(referenceData.width, referenceData.height));
-    }
+    let population = createPopulation(populationSize);
+    
 
     // initialize instance
     instance = {
@@ -129,6 +136,40 @@ function init() {
 
     // click event to update configuration
     $("#apply").on("click", applyConfig);
+
+    // click event for playing and pausing the simulation
+    $("#play").on("click", function(evt) {
+        let $symbol = $(this).children("i");
+        if ($symbol.hasClass("fa-play")) {
+            $symbol.removeClass("fa-play").addClass("fa-pause");
+            instance.pause = false;
+            interval = setInterval(iterate, 0);
+        }
+        else if ($symbol.hasClass("fa-pause")) {
+            $symbol.removeClass("fa-pause").addClass("fa-play");
+            instance.pause = true;
+            clearInterval(interval);
+        }
+    });
+
+    // click event to clear the current simulation
+    $("#stop").on("click", function(evt) {
+        outputContext.fillStyle = 'rgb(0,0,0)';
+        outputContext.fillRect(0, 0, outputCanvas.width, outputCanvas.width);
+        
+        // set the play button icon back to play
+        let $symbol = $("#play").children("i");
+        if ($symbol.hasClass("fa-pause")) {
+            $symbol.removeClass("fa-pause").addClass("fa-play");
+            instance.pause = true;
+        }
+
+        // remove the interval event to stop the simulation
+        clearInterval(interval);
+        
+        // reset the population
+        instance.population = createPopulation(instance.populationSize);
+    });
 }   
 
 function newGeneration() {
@@ -225,7 +266,7 @@ function applyConfig() {
 
 $(document).ready(function() {
     init();
-    setInterval(iterate, 0);
+    //inteval = setInterval(iterate, 0);
     // document.getElementById('file-selector').onchange = function (evt) {
     //     var tgt = evt.target || window.event.srcElement,
     //     files = tgt.files;
