@@ -23,16 +23,8 @@
             <div class="container">
                 <h2 class="mt-4 mb-3">Evolving Images</h2>
                 <div class="row">
-                    <div class="col d-flex align-items-center justify-content-center" style="background-color: lightblue;">
-                        <!-- <canvas id="canvas" width=800 height=600></canvas> -->
-                        <img id="reference" src="https://afamai.github.io/Genetic-Algorithm-Visualizer/img/starrynight.jpg" crossOrigin="anonymous">
-                        <!-- <div style="width:100px;height:100px;background-color: red"></div> -->
-                    </div>
-                    <div class="col d-flex align-items-center justify-content-center">
-                        <canvas id="output" class="border"></canvas>
-                        <!-- <img src="https://afamai.github.io/Genetic-Algorithm-Visualizer/img/starrynight.jpg"> -->
-                        <!-- <div style="width:100px;height:100px;background-color: red"></div> -->
-                    </div>
+                    <img id="reference" src="https://afamai.github.io/Genetic-Algorithm-Visualizer/img/starrynight.jpg" crossOrigin="anonymous">
+                    <canvas id="output" class="border"></canvas>
                 </div>
                 <div class="row">
                     <div class="col">
@@ -69,6 +61,7 @@
                                         <select id="crossover-method" class="col form-control form-control-sm">
                                             <option value="SPC">Single Point Crossover</option>
                                             <option value="TPC">Two Point Crossover</option>
+                                            <option value="UC">Uniform Crossover</option>
                                         </select>
                                     </div>
                                     <div class="form-group form-row mb-0">
@@ -81,10 +74,8 @@
                                     <div class="form-group form-row">
                                         <label for="mutation-method" class="col">Mutation Method</label>
                                         <select id="mutation-method" class="col form-control form-control-sm">
-                                            <option value="randomResetting">Random Resetting</option>
-                                            <option value="swapMutation">Swap Mutation</option>
-                                            <option value="scrambleMutation">Scramble Mutation</option>
-                                            <option value="inversionMutation">Inversion Mutation</option>
+                                            <option value="uniformMutation">Uniform Mutation</option>
+                                            <option value="gaussianMutation">Gaussian Mutation</option>
                                         </select>
                                     </div>
                                     <div class="form-group form-row mb-0">
@@ -102,7 +93,6 @@
                                     </div>
                                     <div class="form-group form-inline">
                                         <button id="apply" type="button" class="btn btn-primary mr-3">Apply</button>
-                                        <button id="new-run" type="button" class="btn btn-primary">New Run</button>
                                     </div>
                                     <div id="alert" role="alert"></div>
                                 </form>

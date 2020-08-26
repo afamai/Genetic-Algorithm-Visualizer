@@ -81,7 +81,7 @@ function init() {
     let img = $("#reference")[0];
     offscreenCanvas = new OffscreenCanvas(img.width, img.height);
     offscreenContext = offscreenCanvas.getContext('2d');
-    offscreenContext.drawImage(img, 0,0);
+    offscreenContext.drawImage(img,0,0);
     referenceData = offscreenContext.getImageData(0,0,img.width, img.height);
 
     // Adjust output canvas dimensions
@@ -100,10 +100,10 @@ function init() {
         generation: 1,
         population: population,
         populationSize: populationSize,
-        selectionMethod: "RWS",
-        crossoverMethod: "TPC",
+        selectionMethod: "TOS",
+        crossoverMethod: "UC",
         crossoverRate: 0.8,
-        mutationMethod: "randomResetting",
+        mutationMethod: "gaussianMutation",
         mutationRate: 0.01,
         elitesToKeep: 1,
         pause: true
@@ -120,48 +120,65 @@ function init() {
     $("#mutation-rate").text(instance.mutationRate);
     $("#mutation-rate-slider").val(instance.mutationRate);
     $("#elitism").val(instance.elitism);
-}
+
+    // input event to update slider values
+    $(".form-control-range").on('input', function(evt) {
+        let formGroup = $(evt.target).closest("div.form-group");
+        $(formGroup).find("p.slider-value").text(evt.target.value);
+    });
+
+    // click event to update configuration
+    $("#apply").on("click", applyConfig);
+}   
 
 function newGeneration() {
-    // get parents
+    // get configuration
     let selectionMethod = instance.selectionMethod;
-    let mutationRate = instance.mutationRate;
     let crossoverMethod = instance.crossoverMethod;
     let crossoverRate = instance.crossoverRate;
+    let mutationMethod = instance.mutationMethod;
+    let mutationRate = instance.mutationRate;
     let elitesToKeep = instance.elitesToKeep;
     let population = instance.population;
 
     population.sort((a, b) => a.fitness > b.fitness ? -1 : 1);
     let genomes = [population[0].genome];
 
-    let parent1 = _.cloneDeep(population[0].genome);
-    let parent2 = _.cloneDeep(population[1].genome);
-
     for (var i = genomes.length; i < instance.populationSize; i++) {
-        // let parents = [];
-        // switch (selectionMethod) {
-        //     case "RWS":
-        //         parents = RWS(population, 2);
-        //         break;
-        //     case "SUS":
-        //         parents = SUS(population, 2);
-        //         break;
-        //     case "TOS":
-        //         parents = TOS(population, 2, 8);
-        //         break;
-        // }
+        let parents = [];
+        switch (selectionMethod) {
+            case "RWS":
+                parents = RWS(population, 2);
+                break;
+            case "SUS":
+                parents = SUS(population, 2);
+                break;
+            case "TOS":
+                parents = TOS(population, 2, 8);
+                break;
+        }
 
-        // let offspring = null;
-        // switch (crossoverMethod) {
-        //     case "SPC":
-        //         offspring = SPC(parent1, parent2, crossoverRate);
-        //         break;
-        //     case "TPC":
-        //         offspring = TPC(parent1, parent2, crossoverRate);
-        //         break;
-        // }
-        offspring = UC(parent1, parent2, crossoverRate, 10);
-        gaussianMutation(offspring, mutationRate);
+        let parent1 = _.cloneDeep(parents[0].genome);
+        let parent2 = _.cloneDeep(parents[1].genome);
+
+        let offspring = null;
+        switch (crossoverMethod) {
+            case "SPC":
+                offspring = SPC(parent1, parent2, crossoverRate);
+                break;
+            case "TPC":
+                offspring = TPC(parent1, parent2, crossoverRate);
+                break;
+            case "UC":
+                offspring = UC(parent1, parent2, crossoverRate, 10);
+                break;
+        }
+        
+        switch (mutationMethod) {
+            case "gaussianMutation":
+                gaussianMutation(offspring, mutationRate);
+                break;
+        }
 
         genomes.push(offspring);
     }
@@ -186,7 +203,7 @@ function iterate() {
             best = population[i];
         }
     }
-    best.draw(context);
+    best.draw(outputContext);
     average = average / instance.populationSize;
     // updateStatistics(population, instance.generation++, true);
 
@@ -195,26 +212,20 @@ function iterate() {
     newGeneration();
 }
 
-function run() {
-    
-    updateStatistics(instance.population, instance.generation++, true);
-    newGeneration();
-    if(instance.generation < 4000) 
-        setTimeout(function() {
-            run();
-        }, 0);
+function applyConfig() {
+    instance.populationSize = parseInt($("#population-slider").val());
+    instance.selectionMethod = $("#selection-method").val();
+    instance.crossoverMethod = $("#crossover-method").val();
+    instance.crossoverRate = parseFloat($("#crossover-rate-slider").val());
+    instance.mutationMethod = $("#mutation-method").val();
+    instance.mutationRate = parseFloat($("#mutation-rate-slider").val());
+    instance.elitism = $("#elitism").is(':checked');
+    console.log(instance);
 }
 
 $(document).ready(function() {
-    
     init();
-
-    // input event to update slider values
-    $(".form-control-range").on('input', function(evt) {
-        let formGroup = $(evt.target).closest("div.form-group");
-        $(formGroup).find("p.slider-value").text(evt.target.value);
-    });
-
+    setInterval(iterate, 0);
     // document.getElementById('file-selector').onchange = function (evt) {
     //     var tgt = evt.target || window.event.srcElement,
     //     files = tgt.files;

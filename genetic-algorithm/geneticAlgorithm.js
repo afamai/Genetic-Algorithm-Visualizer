@@ -6,6 +6,7 @@ function randn_bm() {
     return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
 }
 
+// guassian mutation
 function gaussianMutation(genome, mutationRate, min=0, max=1) {
     for (let i = 0; i < genome.length; i++) {
         if (Math.random() < mutationRate) {
