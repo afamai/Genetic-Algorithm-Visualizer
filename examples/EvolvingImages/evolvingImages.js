@@ -62,6 +62,7 @@ function similarity(referenceData1, referenceData2) {
     return 1 - ssq / (data1.length * 256 * 256);
 }
 
+// Evaluate the fitness of each image in the population
 function evaluate(population) {
     let best = population[0];
     population.forEach(function(image) {
@@ -96,6 +97,7 @@ function init() {
     // Adjust output canvas dimensions
     outputCanvas.width = img.width;
     outputCanvas.height = img.height;
+    outputContext.fillRect(0, 0, outputCanvas.width, outputCanvas.width);
 
     // initialize population
     let populationSize = 50;
@@ -199,10 +201,8 @@ function newGeneration() {
                 break;
         }
 
-        // let parent1 = _.cloneDeep(parents[0].genome);
-        // let parent2 = _.cloneDeep(parents[1].genome);
-        let parent1 = parents[0].genome;
-        let parent2 = parents[1].genome;
+        let parent1 = _.cloneDeep(parents[0].genome);
+        let parent2 = _.cloneDeep(parents[1].genome);
 
         let offspring = null;
         switch (crossoverMethod) {
