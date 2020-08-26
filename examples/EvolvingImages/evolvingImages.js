@@ -199,8 +199,10 @@ function newGeneration() {
                 break;
         }
 
-        let parent1 = _.cloneDeep(parents[0].genome);
-        let parent2 = _.cloneDeep(parents[1].genome);
+        // let parent1 = _.cloneDeep(parents[0].genome);
+        // let parent2 = _.cloneDeep(parents[1].genome);
+        let parent1 = parents[0].genome;
+        let parent2 = parents[1].genome;
 
         let offspring = null;
         switch (crossoverMethod) {

@@ -29,15 +29,6 @@ function uniformMutation(genome, mutationRate, min=0, max=1) {
     }
 }
 
-// random resetting
-function randomResetting(genome, mutationRate) {
-    genome.forEach(function(gene) {
-        if (Math.random() < mutationRate) {
-            gene = Math.random();
-        }
-    })
-}
-
 // swap mutation
 function swapMutation(genome, mutationRate) {
     if (Math.random() < mutationRate) {
@@ -89,20 +80,22 @@ function inversionMutation(genome, mutationRate) {
 }
 
 // single point crossover
-function SPC(parent1, parent2, crossoverRate) {
+function SPC(parent1, parent2, crossoverRate, geneLength=1) {
     if (Math.random() < crossoverRate) {        
-        let index = Math.floor(Math.random() * parent1.length);
+        let index = Math.floor(Math.random() * parent1.length/geneLength) * geneLength;
         return parent1.slice(0, index).concat(parent2.slice(index));
     }
     return parent1;
 }
 
 // two point crossover
-function TPC(parent1, parent2, crossoverRate) {
+function TPC(parent1, parent2, crossoverRate, geneLength=1) {
     if (Math.random() < crossoverRate) {
-        let len = parent1.length;
+        let len = parent1.length/geneLength;
         let index1 = Math.floor(Math.random() * len);
-        let index2 = Math.floor(Math.random() * (len - index1 - 1) + index1);
+        let index2 = Math.floor(Math.random() * (len - index1) + index1); 
+        index1 *= geneLength;
+        index2 *= geneLength;
         return parent1.slice(0, index1).concat(parent2.slice(index1, index2)).concat(parent1.slice(index2));
     }
     return parent1
