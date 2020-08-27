@@ -63,18 +63,6 @@ function similarity(referenceData1, referenceData2) {
     return 1 - ssq / (data1.length * 256 * 256);
 }
 
-// Evaluate the fitness of each image in the population
-function evaluate(population) {
-    let best = population[0];
-    population.forEach(function(image) {
-        image.fitness = 1 - SSD(referenceData, image.referenceData);
-        if (image.fitness > best.getFitness()) {
-            best = image;
-        }
-    });
-    //context.drawImage(best.canvas,0,0);
-}
-
 function createPopulation(size) {
     let population = [];
     for (let i = 0; i < size; i++) {
@@ -177,6 +165,7 @@ function init() {
         instance.population = createPopulation(instance.populationSize);
         // set generation number back to 1
         instance.generation = 0;
+        totalTime = 0;
     });
 }   
 
@@ -294,52 +283,6 @@ function applyConfig() {
 
 $(document).ready(function() {
     init();
-    //inteval = setInterval(iterate, 0);
-    // document.getElementById('file-selector').onchange = function (evt) {
-    //     var tgt = evt.target || window.event.srcElement,
-    //     files = tgt.files;
-
-    //     // FileReader support
-    //     if (FileReader && files && files.length) {
-    //         var fr = new FileReader();
-    //         fr.onload = function () {
-    //             let img = document.getElementById("image");
-                
-    //             img.onload = function () {
-    //                 let img = document.getElementById("image");
-    //                 canvas.width = img.width;
-    //                 canvas.height = img.height;
-
-    //                 offscreenCanvas = new OffscreenCanvas(img.width, img.height);
-    //                 offscreenContext = offscreenCanvas.getContext('2d');
-
-    //                 let m = new OffscreenCanvas(img.width, img.height);
-    //                 let c = m.getContext('2d');
-    //                 c.drawImage(img, 0,0);
-    //                 referenceData = c.getreferenceData(0,0,img.width, img.height)
-
-    //                 let test = new PolygonImage();
-    //                 test.draw(context);
-                    
-    //                 init();
-    //                 //iterate();
-    //                 setInterval(iterate, 0);
-    //                 // init();
-    //                 // run();
-    //                 // for(let i = 0; i < 10; i++) {
-    //                 //     evaluate(instance.population);
-    //                 //     updateStatistics(instance.population, generation++);
-    //                 //     newGeneration();
-    //                 // }
-                    
-    //             }
-
-    //             img.src = fr.result;
-
-                
-    //         }
-    //         fr.readAsDataURL(files[0]);
-    //     }
 });
 
 
