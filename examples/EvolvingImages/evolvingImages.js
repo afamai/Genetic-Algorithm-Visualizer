@@ -5,6 +5,7 @@ var offscreenContext = null;
 var referenceData = null;
 var instance = null;
 var interval = null;
+var totalTime = 0;
 
 class PolygonImage {
     constructor() {
@@ -174,6 +175,8 @@ function init() {
         
         // reset the population
         instance.population = createPopulation(instance.populationSize);
+        // set generation number back to 1
+        instance.generation = 0;
     });
 }   
 
@@ -245,24 +248,37 @@ function newGeneration() {
 
 function iterate() {
     // evaluate the population
+    let startTime = new Date().getTime();
     let population = instance.population;
     let best = population[0];
-    let average = 0;
+    let worst = population[0];
+    let totalFitness = 0;
     for (let i = 0; i < population.length; i++) {
         let fitness = similarity(referenceData, population[i].referenceData);
-        average += fitness;
+        totalFitness += fitness;
         population[i].fitness = fitness;
         if (fitness > best.fitness) {
             best = population[i];
         }
+        if (fitness < worst.fitness) {
+            worst = population[i];
+        }
     }
     best.draw(outputContext);
-    average = average / instance.populationSize;
-    // updateStatistics(population, instance.generation++, true);
+    let average = totalFitness / instance.populationSize;
 
-    // update the text for current generation
-    $("#current-stat").html("Generation: " + instance.generation++ + "<br>Best Fitness: " + best.fitness + "<br>Average Fitness: " + average);
     newGeneration();
+
+    totalTime += new Date().getTime() - startTime;
+
+    // update the analytics
+    $("#generation").text(instance.generation);
+    $("#highest-fitness").text((best.fitness * 100).toFixed(2) + "%");
+    $("#lowest-fitness").text((worst.fitness * 100).toFixed(2) + "%");
+    $("#average-fitness").text((average * 100).toFixed(2) + "%");
+    $("#average-time").text((totalTime / instance.generation).toFixed(2) + "ms")
+
+    instance.generation++;
 }
 
 function applyConfig() {
