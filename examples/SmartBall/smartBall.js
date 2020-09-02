@@ -4,6 +4,8 @@ var context = null;
 var startPosition = null;
 var target = null;
 var instance = null;
+var chart = null;
+var chartConfig = null;
 var counter = 1;
 var minJumpStr = 50;
 var maxJumpStr = 150;
@@ -228,7 +230,13 @@ function init() {
             instance.population.push(new Ball(startPosition));
         }
 
+        // redraw the simulation
         draw();
+
+        // reset the analytics
+        instance.generation = 0;
+        // clear the chart
+        initChart();
     })
 
     // click event for playing and pausing the simulation
@@ -348,11 +356,23 @@ function step() {
             }
         }
         average /= population.length;
+
         // update analytics
-        $("#generation").text(instance.generation++);
+        $("#generation").text(instance.generation);
         $("#highest-fitness").text((best.fitness).toFixed(5));
         $("#lowest-fitness").text((worst.fitness).toFixed(5));
         $("#average-fitness").text((average).toFixed(5));
+
+        // update chart
+        // add new label
+        chartConfig.data.labels.push(instance.generation++);
+        // add new data onto chart and update
+        let datasets = chartConfig.data.datasets;
+        datasets[0].data.push(best.fitness);
+        datasets[1].data.push(average);
+        datasets[2].data.push(worst.fitness);
+        chart.update();
+
         newGeneration();
     }
 }
@@ -476,6 +496,64 @@ function applyConfig() {
     console.log(instance);
 }
 
+function initChart() {
+    var ctx = $("#mychart");
+    chartConfig = {
+        type: 'line',
+        data: {
+            labels: [0],
+            datasets: [{
+                label: "Best Fitness",
+                lineTension: 0,
+                data: [0],
+                borderColor: "rgb(0, 183, 17, 1)",
+                borderWidth: 1,
+                fill: false
+            },{
+                label: "Average Fitness",
+                lineTension: 0,
+                data: [0],
+                borderColor: "rgb(170,170,170,1)",
+                borderWidth: 1,
+                fill: false
+            },{
+                label: "Worst Fitness",
+                lineTension: 0,
+                data: [0],
+                borderColor: "rgb(217,0,0,1)",
+                borderWidth: 1,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                xAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: "Generation"
+                    }
+                }],
+                yAxes: [{
+                    scaleLabel: {
+                        display: true, 
+                        labelString: "Fitness"
+                    },
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            },
+            elements: {
+                point:{
+                    radius: 0
+                }
+            }
+        }
+    };
+    chart = new Chart(ctx, chartConfig);
+}
+
 $(document).ready(function() {
     Box2D().then(function(Box2D) {
         using(Box2D, "b2.+");
@@ -483,4 +561,6 @@ $(document).ready(function() {
         init();
         draw();
     });
+    // setup chart
+    initChart();
 });
