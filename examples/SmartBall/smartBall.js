@@ -210,6 +210,27 @@ function init() {
     // click event to update configuration
     $("#apply").click(applyConfig);
 
+    // click event to reset simulation
+    $("#stop").click(function() {
+        let $symbol = $("#play").children("i");
+        if ($symbol.hasClass("fa-pause")) {
+            $symbol.removeClass("fa-pause").addClass("fa-play");
+            instance.pause = true;
+        }
+        // remove all body from the world
+        instance.population.forEach(function(ball) {
+            world.DestroyBody(ball.body);
+        });
+
+        // create a new population
+        instance.population = [];
+        for (let i = 0; i < instance.populationSize; i++) {
+            instance.population.push(new Ball(startPosition));
+        }
+
+        draw();
+    })
+
     // click event for playing and pausing the simulation
     $("#play").click(function() {
         let $symbol = $(this).children("i");
@@ -224,6 +245,7 @@ function init() {
         }
     });
 
+    // click event to speed up simulation
     $("#fast-forward").click(function() {
         if (instance.speed == 32) {
             instance.speed = 1;
