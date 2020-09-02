@@ -23,74 +23,97 @@
             <div class="container">
                 <h2 class="mt-4 mb-3">Smart Ball</h2>
                 <div class="row">
-                    <div class="col text-center">
-                        <canvas id="canvas" width=800 height=600></canvas>
+                    <div class="col col-md-auto">
+                        <canvas id="canvas" width=1000 height=600></canvas>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button id="stop" type="button" class="btn btn-outline-danger" style="outline: none;box-shadow: none;"><i class="fas fa-stop"></i></button>
+                            <button id="play" type="button" class="btn btn-outline-success ml-2" style="outline: none;box-shadow: none;"><i class="fas fa-play"></i></button>
+                            <button id="fast-forward" type="button" class="btn btn-outline-success ml-2" style="outline: none;box-shadow: none;"><i class="fas fa-fast-forward"></i></button>
+                            <span class="ml-2" id="speed"></span>
+                        </div>
                     </div>
-                    <div class="pt-2 col">
+                </div>
+                <div class="row mt-3">
+                    <div class="col">
                         <form>
-                            <h5>Play Settings</h5>
-                            <div class="row mb-3">
-                                <button id="play" type="button" class="btn btn-light ml-3 mr-2 disabled" disabled><i class="fas fa-play"></i></button>
-                                <button id="pause" type="button" class="btn btn-light mr-2"><i class="fas fa-pause"></i></button>
-                                <button id="fast-forward" type="button" class="btn btn-light mr-2"><i class="fas fa-fast-forward"></i></button>
-                                <p id="speed" class="mb-0">x1</p>
-                            </div>
-                            <h5>Algorithm Parameters</h5>
-                            <div class="form-group form-row">
-                                <label for="population" class="col">Population Size:</label>
-                                <input type="number" id="population" class="col form-control form-control-sm">
-                                <div id="population-error" class="invalid-feedback"></div>
+                            <h5 class="mb-3">Algorithm Parameters</h5>
+                            <div class="form-group form-row mb-0">
+                                <label class="col-4" for="population">Population Size</label>
+                                <div class="col-7 mt-1">
+                                    <input type="range" class="form-control-range" id="population-slider" min="1" max="300" step="1">
+                                </div>
+                                <p id="population" class="slider-value col-1"></p>
                             </div>
                             <div class="form-group form-row">
-                                <label for="selection-method" class="col">Selection Method:</label>
-                                <select id="selection-method" class="col form-control form-control-sm">
+                                <label for="selection-method" class="col-4">Selection Method</label>
+                                <select id="selection-method" class="col-7 form-control form-control-sm">
                                     <option value="RWS">Roulette Wheel Selection</option>
                                     <option value="SUS">Stochastic Universal Sampling</option>
                                     <option value="TOS">Tournament Selection</option>
                                 </select>
                             </div>
                             <div class="form-group form-row">
-                                <label for="crossover-method" class="col">Crossover Method:</label>
-                                <select id="crossover-method" class="col form-control form-control-sm">
+                                <label for="crossover-method" class="col-4">Crossover Method</label>
+                                <select id="crossover-method" class="col-7 form-control form-control-sm">
                                     <option value="SPC">Single Point Crossover</option>
                                     <option value="TPC">Two Point Crossover</option>
                                     <option value="UC">Uniform Crossover</option>
                                 </select>
                             </div>
-                            <div class="form-group form-row">
-                                <label for="crossover-rate" class="col">Crossover Rate:</label>
-                                <input type="number" id="crossover-rate" class="col form-control form-control-sm" step="0.01">
-                                <div id="crossover-rate-error" class="invalid-feedback"></div>
+                            <div class="form-group form-row mb-0">
+                                <label for="crossover-rate" class="col-4">Crossover Rate</label>
+                                <div class="col-7 mt-1">
+                                    <input type="range" class="form-control-range" id="crossover-rate-slider" min="0" max="1" step="0.01">
+                                </div>
+                                <p id="crossover-rate" class="slider-value col-1"></p>
                             </div>
                             <div class="form-group form-row">
-                                <label for="mutation-method" class="col">Mutation Method:</label>
-                                <select id="mutation-method" class="col form-control form-control-sm">
-                                    <option value="gaussianMutation">Gaussian Mutation</option>
+                                <label for="mutation-method" class="col-4">Mutation Method</label>
+                                <select id="mutation-method" class="col-7 form-control form-control-sm">
                                     <option value="uniformMutation">Uniform Mutation</option>
+                                    <option value="gaussianMutation">Gaussian Mutation</option>
                                 </select>
                             </div>
-                            <div class="form-group form-row">
-                                <label for="mutation-rate" class="col">Mutation Rate:</label>
-                                <input type="number" id="mutation-rate" class="col form-control form-control-sm" step="0.01">
-                                <div id="mutation-rate-error" class="invalid-feedback"></div>
+                            <div class="form-group form-row mb-0">
+                                <label for="mutation-rate" class="col-4">Mutation Rate</label>
+                                <div class="col-7 mt-1">
+                                    <input type="range" class="form-control-range" id="mutation-rate-slider" min="0" max="1" step="0.01">
+                                </div>
+                                <p id="mutation-rate" class="slider-value col-1"></p>
                             </div>
                             <div class="form-group form-row">
-                                <label for="elite-amount" class="col">Elites to Keep:</label>
-                                <input type="number" id="elite-amount" class="col form-control form-control-sm">
-                                <div id="elite-amount-error" class="invalid-feedback"></div>
+                                <label class="form-check-label col-4" for="elitism">Elitism</label>
+                                <div class="col-7 mt-1">
+                                    <input type="checkbox" id="elitism">
+                                </div>
                             </div>
                             <div class="form-group form-inline">
                                 <button id="apply" type="button" class="btn btn-primary mr-3">Apply</button>
-                                <button id="new-run" type="button" class="btn btn-primary">New Run</button>
                             </div>
                             <div id="alert" role="alert"></div>
                         </form>
                     </div>
-                </div>
-                <div id="statistics">
-                    <p id="current-stat" class="mb-5"></p>
-                    <div>
-                        <canvas id="chart" width="600" height="400"></canvas>
+                    <div class="pt-2 col">
+                        <table class="table table-striped table-bordered">
+                            <tbody>
+                                <tr>
+                                    <td>Generation</td>
+                                    <td id="generation"></td>
+                                </tr>
+                                <tr>
+                                    <td>Highest Fitness</td>
+                                    <td id="highest-fitness"></td>
+                                </tr>
+                                <tr>
+                                    <td>Lowest Fitness</td>
+                                    <td id="lowest-fitness"></td>
+                                </tr>
+                                <tr>
+                                    <td>Average Fitness</td>
+                                    <td id="average-fitness"></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

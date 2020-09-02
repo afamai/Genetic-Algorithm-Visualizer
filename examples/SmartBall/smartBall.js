@@ -1,10 +1,8 @@
 var world = null;
 var canvas = null;
 var context = null;
-var population = null;
 var startPosition = null;
 var target = null;
-var generation = null;
 var instance = null;
 var counter = 1;
 var minJumpStr = 50;
@@ -54,9 +52,11 @@ class Ball {
     }
 
     reset() {
+        // recreate the body if it was destroyed
         if (this.hit) {
             this.createBody();
         }
+        // place the body back to the start position
         this.body.SetTransform(this.startPosition, this.body.GetAngle());
         this.counter = 0;
         this.distanceToTarget = Infinity;
@@ -68,6 +68,7 @@ class Ball {
     update() {
         // destroy body from world if it hits the target
         if (this.hit) {
+            this.fitness = 1;
             world.DestroyBody(this.body);
             this.done = true;
         }
@@ -133,7 +134,7 @@ function init() {
     let populationSize = 200;
     startPosition = new b2Vec2(0, -13.5);
 
-    population = [];
+    let population = [];
     for (let i = 0; i < populationSize; i++) {
         population.push(new Ball(startPosition));
     }
@@ -174,16 +175,65 @@ function init() {
     // init variables
     generation = 1;
     instance = {
+        population: population,
         populationSize: populationSize,
         selectionMethod: "RWS",
         crossoverMethod: "TPC",
         crossoverRate: 0.8,
         mutationMethod: "uniformMutation",
         mutationRate: 0.01,
-        elitesToKeep: 5,
+        elitism: true,
+        generation: 1,
         speed: 1,
         pause: false
     }
+
+    // initialize the ui
+    $("#population").text(instance.populationSize);
+    $("#population-slider").val(instance.populationSize);
+    $("#selection-method").val(instance.selectionMethod);
+    $("#crossover-method").val(instance.crossoverMethod);
+    $("#crossover-rate").text(instance.crossoverRate);
+    $("#crossover-rate-slider").val(instance.crossoverRate);
+    $("#mutation-method").val(instance.mutationMethod);
+    $("#mutation-rate").text(instance.mutationRate);
+    $("#mutation-rate-slider").val(instance.mutationRate);
+    $("#elitism").prop('checked', instance.elitism);
+    $("#speed").text("x" + instance.speed);
+
+    // input event to update slider values
+    $(".form-control-range").on('input', function(evt) {
+        let formGroup = $(evt.target).closest("div.form-group");
+        $(formGroup).find("p.slider-value").text(evt.target.value);
+    });
+
+    // click event to update configuration
+    $("#apply").click(applyConfig);
+
+    // click event for playing and pausing the simulation
+    $("#play").click(function() {
+        let $symbol = $(this).children("i");
+        if ($symbol.hasClass("fa-play")) {
+            $symbol.removeClass("fa-play").addClass("fa-pause");
+            instance.pause = false;
+            run();
+        }
+        else if ($symbol.hasClass("fa-pause")) {
+            $symbol.removeClass("fa-pause").addClass("fa-play");
+            instance.pause = true;
+        }
+    });
+
+    $("#fast-forward").click(function() {
+        if (instance.speed == 32) {
+            instance.speed = 1;
+        }
+        else {
+            instance.speed *= 2;
+        }
+        $("#speed").text("x" + instance.speed);
+    });
+        
 }
 
 function draw() {
@@ -240,6 +290,7 @@ function step() {
     world.Step(1/60, 8, 3);
     // find the distance between each ball and the target
     let generationEnd = true;
+    let population = instance.population;
     population.forEach(function (ball) {
         if (!ball.done) {
             ball.update();
@@ -262,27 +313,43 @@ function step() {
     });
 
     if (generationEnd) {
-        updateStatistics(population, generation++);
+        let best = population[0];
+        let worst = population[0];
+        let average = 0;
+        for (let i = 0; i < population.length; i++) {
+            average += population[i].fitness;
+            if (best.fitness < population[i].fitness) {
+                best = population[i];
+            }
+            if (worst.fitness > population[i].fitness) {
+                worst = population[i];
+            }
+        }
+        average /= population.length;
+        // update analytics
+        $("#generation").text(instance.generation++);
+        $("#highest-fitness").text((best.fitness).toFixed(5));
+        $("#lowest-fitness").text((worst.fitness).toFixed(5));
+        $("#average-fitness").text((average).toFixed(5));
         newGeneration();
-        //population.forEach(ball => ball.reset());
     }
-    draw();
 }
 
 function newGeneration() {
-
-    // get parents
+    // get parameters
+    let population = instance.population;
     let selectionMethod = instance.selectionMethod;
     let mutationMethod = instance.mutationMethod;
     let mutationRate = instance.mutationRate;
     let crossoverMethod = instance.crossoverMethod;
     let crossoverRate = instance.crossoverRate;
-    let elitesToKeep = instance.elitesToKeep;
+    let elitism = instance.elitism;
 
-    let genomes = null;
-    if (elitesToKeep > 0) {
+    let genomes = [];
+    // if elitism is enabled, place the best genome into the next generation
+    if (elitism) {
         population.sort((a, b) => a.fitness > b.fitness ? -1 : 1);
-        genomes = population.slice(0, elitesToKeep).map((v) => v.genome);
+        genomes.push(population[0].genome);
     }
 
     for (var i = genomes.length; i < instance.populationSize; i++) {
@@ -298,7 +365,6 @@ function newGeneration() {
                 parents = TOS(population, 2, 8);
                 break;
         }
-        console.log(parents)
         let offspring = null;
         let parent1 = _.cloneDeep(parents[0].genome);
         let parent2 = _.cloneDeep(parents[1].genome);
@@ -361,81 +427,13 @@ function distance(bodyA, bodyB) {
     return Math.sqrt((posA.x - posB.x)**2 + (posA.y - posB.y)**2);
 }
 
-function validation() {
-    let valid = true
-    let populationSize = parseInt($("#population").val());
-    let crossoverRate = parseFloat($("#crossover-rate").val());
-    let mutationRate = parseFloat($("#mutation-rate").val());
-    let elitesToKeep = parseInt($("#elite-amount").val());
-
-    // population size validation
-    if (isNaN(populationSize)) {
-        $("#population-error").text("Must be a valid number");
-        $("#population").addClass("is-invalid");
-        valid = false;
-    } 
-    else if (populationSize < 1 || populationSize > 500){
-        $("#population-error").text("Population size must be between 1 - 500");
-        $("#population").addClass("is-invalid");
-        valid = false
-    }
-    else {
-        $("#population").removeClass("is-invalid");
-    }
-
-    // crossover rate validation
-    if (isNaN(crossoverRate)) {
-        $("#crossover-rate-error").text("Must be a valid number");
-        $("#crossover-rate").addClass("is-invalid");
-        valid = false;
-    } 
-    else if (crossoverRate < 0 || crossoverRate > 1){
-        $("#crossover-rate-error").text("Crossover rate must be between 0.0 - 1.0");
-        $("#crossover-rate").addClass("is-invalid");
-        valid = false
-    }
-    else {
-        $("#crossover-rate").removeClass("is-invalid");
-    }
-
-    // mutation rate validation
-    if (isNaN(mutationRate)) {
-        $("#mutation-rate-error").text("Must be a valid number");
-        $("#mutation-rate").addClass("is-invalid");
-        valid = false;
-    } 
-    else if (mutationRate < 0.0 || mutationRate > 1.0){
-        $("#mutation-rate-error").text("Mutation rate must be between 0.0 - 1.0");
-        $("#mutation-rate").addClass("is-invalid");
-        valid = false
-    }
-    else {
-        $("#mutation-rate").removeClass("is-invalid");
-    }
-    
-    // elites to keep validation
-    if (isNaN(elitesToKeep)) {
-        $("#elite-amount-error").text("Must be a valid number");
-        $("#elite-amount").addClass("is-invalid");
-        valid = false;
-    } 
-    else if (elitesToKeep < 0 || elitesToKeep > 15){
-        $("#elite-amount-error").text("Elites to keep must be between 1 - 15" );
-        $("#elite-amount").addClass("is-invalid");
-        valid = false
-    }
-    else {
-        $("#elite-amount").removeClass("is-invalid");
-    }
-    return valid;
-}
-
 function run() {
     if (instance.pause)
         return;
 
     step();
     if (counter >= instance.speed) {
+        draw();
         requestAnimationFrame(run);
         counter = 1;
     }
@@ -445,79 +443,22 @@ function run() {
     }
 }
 
+function applyConfig() {
+    instance.populationSize = parseInt($("#population-slider").val());
+    instance.selectionMethod = $("#selection-method").val();
+    instance.crossoverMethod = $("#crossover-method").val();
+    instance.crossoverRate = parseFloat($("#crossover-rate-slider").val());
+    instance.mutationMethod = $("#mutation-method").val();
+    instance.mutationRate = parseFloat($("#mutation-rate-slider").val());
+    instance.elitism = $("#elitism").is(':checked');
+    console.log(instance);
+}
+
 $(document).ready(function() {
-    //var instance = init();
     Box2D().then(function(Box2D) {
         using(Box2D, "b2.+");
         this.Box2D = Box2D;
         init();
-    
-        // initialize the ui
-        $("#population").val(instance.populationSize);
-        $("#selection-method").val(instance.selectionMethod);
-        $("#crossover-method").val(instance.crossoverMethod);
-        $("#crossover-rate").val(instance.crossoverRate);
-        $("#mutation-method").val(instance.mutationMethod);
-        $("#mutation-rate").val(instance.mutationRate);
-        $("#elite-amount").val(instance.elitesToKeep);
-        
-        run();
+        draw();
     });
-
-    $("#apply,#new-run").click(function() {
-        let valid = validation(instance);
-        if (valid) {
-            instance.populationSize = parseInt($("#population").val());
-            instance.selectionMethod = $("#selection-method").val();
-            instance.crossoverMethod = $("#crossover-method").val();
-            instance.crossoverRate = parseFloat($("#crossover-rate").val());
-            instance.mutationMethod = $("#mutation-method").val();
-            instance.mutationRate = parseFloat($("#mutation-rate").val());
-            instance.elitesToKeep = parseInt($("#elite-amount").val());
-
-            $("#alert").show().removeClass();
-            $("#alert").addClass("alert alert-success").text("Successfully applied settings");
-            $("#alert").fadeOut(2000);
-
-            if($(this).attr("id") == "new-run") {
-                generation = 0;
-                // clear out all bodies from the world
-                population.forEach(ball => world.DestroyBody(ball.body));
-                population = [];
-                // generate new balls
-                for (let i = 0; i < instance.populationSize; i++) {
-                    population.push(new Ball(startPosition));
-                }
-            }
-        } 
-        else {
-            $("#alert").show().removeClass();
-            $("#alert").addClass("alert alert-danger").text("Failed to apply settings");
-            $("#alert").fadeOut(2000);
-        }
-    });
-
-    $("#play").click(function() {
-        instance.pause = false;
-        $(this).addClass("disabled").prop( "disabled", true);
-        $("#pause").removeClass("disabled").prop( "disabled", false);
-        run();
-    });
-
-    $("#pause").click(function() {
-        instance.pause = true;
-        $(this).addClass("disabled").prop( "disabled", true);
-        $("#play").removeClass("disabled").prop( "disabled", false);
-    })
-
-    $("#fast-forward").click(function() {
-        if (instance.speed == 32) {
-            instance.speed = 1;
-        }
-        else {
-            instance.speed *= 2;
-        }
-        $("#speed").text("x" + instance.speed);
-    });
-        
 });
