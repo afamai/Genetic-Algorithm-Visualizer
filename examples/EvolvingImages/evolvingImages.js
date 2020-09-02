@@ -218,7 +218,7 @@ function newGeneration() {
         
         switch (mutationMethod) {
             case "gaussianMutation":
-                gaussianMutation(offspring, mutationRate);
+                gaussianMutation(offspring, mutationRate, magnitude=0.1);
                 break;
             case "uniformMutation":
                 uniformMutation(offspring, mutationRate);

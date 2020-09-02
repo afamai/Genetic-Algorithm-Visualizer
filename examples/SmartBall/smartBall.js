@@ -1,17 +1,17 @@
-class Jump {
-    constructor() {
-        this.x = 0;
-        this.y = 0;
-        this.randomize();
-    }
-
-    randomize() {
-        let power = Math.random() * 100 + 30;
-        let angle = Math.random() * Math.PI;
-        this.x = Math.cos(angle) * power;
-        this.y = Math.sin(angle) * power;
-    };
-}
+var world = null;
+var canvas = null;
+var context = null;
+var population = null;
+var startPosition = null;
+var target = null;
+var generation = null;
+var instance = null;
+var counter = 1;
+var minJumpStr = 50;
+var maxJumpStr = 150;
+var minAngle = 0;
+var maxAngle = Math.PI;
+var geneLength = 2;
 
 class Ball {
     constructor(startPos) {
@@ -19,13 +19,13 @@ class Ball {
 
         this.done = false;
         this.counter = 0;
-        this.distanceToTarget = Infinity;
-        this.isElite = false;
+        this.fitness = 0;
 
-        // initialize jumps
-        this.jumps = [];
+        // initialize genome as an array of jumps
+        this.genome = [];
         for(var i = 0; i < 20; i++) {
-            this.jumps.push(new Jump());
+            // add random angle and jump strength
+            this.genome.push(Math.random(), Math.random());
         }
 
         this.createBody();
@@ -53,12 +53,6 @@ class Ball {
         this.body.ball = this;
     }
 
-    getFitness() {
-        if (this.best)
-            return 1;
-        return 1 / this.distanceToTarget;
-    }
-
     reset() {
         if (this.hit) {
             this.createBody();
@@ -78,11 +72,16 @@ class Ball {
             this.done = true;
         }
 
+        // check to see if the ball is moving
         let velocity = this.body.GetLinearVelocity();
         if (velocity.y == 0 && velocity.x == 0) {
-            if (this.counter < this.jumps.length) {
-                let jump = this.jumps[this.counter++];
-                this.body.ApplyForceToCenter(new b2Vec2(jump.x, jump.y), true);
+            // if not moving and theres still jumps left, make a jump
+            if (this.counter < this.genome.length) {
+                let angle = this.genome[this.counter++] * (maxAngle - minAngle) + minAngle;
+                let strength = this.genome[this.counter++] * (maxJumpStr - minJumpStr) + minJumpStr;
+                let x = Math.cos(angle) * strength;
+                let y = Math.sin(angle) * strength;
+                this.body.ApplyForceToCenter(new b2Vec2(x, y), true);
             } 
             else {
                 this.done = true;
@@ -92,16 +91,6 @@ class Ball {
         
     }
 }
-
-var world = null;
-var canvas = null;
-var context = null;
-var population = null;
-var startPosition = null;
-var target = null;
-var generation = null;
-var instance = null;
-var counter = 1;
 
 function init() {
     canvas = document.getElementById("canvas");
@@ -189,8 +178,8 @@ function init() {
         selectionMethod: "RWS",
         crossoverMethod: "TPC",
         crossoverRate: 0.8,
-        mutationMethod: "randomResetting",
-        mutationRate: 0.1,
+        mutationMethod: "uniformMutation",
+        mutationRate: 0.01,
         elitesToKeep: 5,
         speed: 1,
         pause: false
@@ -255,9 +244,9 @@ function step() {
         if (!ball.done) {
             ball.update();
             let body = ball.body;
-            let dist = distance(body, target);
-            if (dist < ball.distanceToTarget) {
-                ball.distanceToTarget = dist;
+            let fitness = 1 / distance(body, target);
+            if (fitness > ball.fitness) {
+                ball.fitness = fitness;
             }
 
             let position = body.GetPosition();
@@ -292,8 +281,8 @@ function newGeneration() {
 
     let genomes = null;
     if (elitesToKeep > 0) {
-        population.sort((a, b) => a.getFitness() > b.getFitness() ? -1 : 1);
-        genomes = population.slice(0, elitesToKeep).map((v) => v.jumps);
+        population.sort((a, b) => a.fitness > b.fitness ? -1 : 1);
+        genomes = population.slice(0, elitesToKeep).map((v) => v.genome);
     }
 
     for (var i = genomes.length; i < instance.populationSize; i++) {
@@ -309,31 +298,28 @@ function newGeneration() {
                 parents = TOS(population, 2, 8);
                 break;
         }
-
+        console.log(parents)
         let offspring = null;
-        let parent1 = _.cloneDeep(parents[0].jumps);
-        let parent2 = _.cloneDeep(parents[1].jumps);
+        let parent1 = _.cloneDeep(parents[0].genome);
+        let parent2 = _.cloneDeep(parents[1].genome);
         switch (crossoverMethod) {
             case "SPC":
-                offspring = SPC(parent1, parent2, crossoverRate);
+                offspring = SPC(parent1, parent2, crossoverRate, 2);
                 break;
             case "TPC":
-                offspring = TPC(parent1, parent2, crossoverRate);
+                offspring = TPC(parent1, parent2, crossoverRate, 2);
+                break;
+            case "UC":
+                offspring = UC(parent1, parent2, crossoverRate, 2);
                 break;
         }
         
         switch (mutationMethod) {
-            case "randomResetting":
-                randomResetting(offspring, mutationRate);
+            case "gaussianMutation":
+                gaussianMutation(offspring, mutationRate);
                 break;
-            case "swapMutation":
-                swapMutation(offspring, mutationRate);
-                break;
-            case "scrambleMutation":
-                scrambleMutation(offspring, mutationRate);
-                break;
-            case "inversionMutation":
-                inversionMutation(offspring, mutationRate);
+            case "uniformMutation":
+                uniformMutation(offspring, mutationRate);
                 break;
         }
 
@@ -342,20 +328,20 @@ function newGeneration() {
 
     if (population.length < instance.populationSize) {
         population.forEach(function(ball, idx) {
-            ball.jumps = [].concat(genomes[idx]);
+            ball.genome = [].concat(genomes[idx]);
             ball.reset();
         });
 
         // add extra indiviuals to the population
         for(let i = population.length; i < instance.populationSize; i++) {
             let ball = new Ball(startPosition);
-            ball.jumps = genomes[i];
+            ball.genome = genomes[i];
             population.push(ball);
         }
     }
     else {
-        genomes.forEach(function(jumps, idx) {
-            population[idx].jumps = jumps;
+        genomes.forEach(function(genome, idx) {
+            population[idx].genome = genome;
             population[idx].reset();
         });
 

@@ -7,10 +7,10 @@ function randn_bm() {
 }
 
 // guassian mutation
-function gaussianMutation(genome, mutationRate, min=0, max=1) {
+function gaussianMutation(genome, mutationRate, min=0, max=1, magnitude=1) {
     for (let i = 0; i < genome.length; i++) {
         if (Math.random() < mutationRate) {
-            genome[i] += randn_bm() * 0.1;
+            genome[i] += randn_bm() * magnitude;
             if (genome[i] > max)
                 genome[i] = max;
 
