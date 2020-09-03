@@ -8,19 +8,32 @@
     </head>
     <body class="d-flex flex-column h-100">
         <header>
-            <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-                <a class="navbar-brand" href="#">Genetic Algorithm Visualizer</a>
-            </nav>
+            <div class="navbar-wrapper">
+                <div class="container">
+                    <a class="navbar-brand" href="../../index.html">Genetic Algorithm Visualizer</a>
+                </div>
+            </div>
+            <div class="jumbotron">
+                <h1 class="display-4 text-center m-5">Genetic Algorithm Visualizer</h1>
+                <a><i class="fab fa-github"></i><span class="ml-1">Github</span></a>
+            </div>
         </header>
         <main>
             <div class="container">
-                <h2 class="mt-4 mb-3">Examples</h2>
-                <div class="card" style="width: 18rem;">
-                    <img class="card-img-top" src="./img/smartball.PNG" alt="Card image cap">
-                    <div class="card-body">
-                        <h5 class="card-title">Smart Ball</h5>
-                        <p class="card-text">A simulation of balls where it tries to find the best sequence of jumps to reach the target using the genetic algorithm</p>
-                        <a href="./examples/SmartBall/index.html" class="btn btn-primary">View</a>
+                <div class="d-flex">
+                    <div class="card" style="width: 18rem;">
+                        <div class="card-body">
+                            <h5 class="card-title">Smart Balls</h5>
+                            <p class="card-text">A simulation of bouncing balls where it tries to find the best sequence of jumps to reach the target</p>
+                            <a href="./examples/SmartBall/index.html">View</a>
+                        </div>
+                    </div>
+                    <div class="card ml-3" style="width: 18rem;">
+                        <div class="card-body">
+                            <h5 class="card-title">Evolving Images</h5>
+                            <p class="card-text">A program that attempt to reproduce an image by evolving a bunch of images that contains a collection of polygons</p>
+                            <a href="./examples/EvolvingImages/index.html">View</a>
+                        </div>
                     </div>
                 </div>
             </div>
