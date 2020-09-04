@@ -9,8 +9,12 @@ var totalTime = 0;
 
 class PolygonImage {
     constructor() {
-        // generate a random dna
         this.genome = [];
+        this.imageData = null;
+    }
+
+    randomize() {
+        // generate a random dna
         for (let i = 0; i < 125; i++) {
             // random RGBA values
             this.genome.push(Math.random(), Math.random(), Math.random(), Math.max(Math.random() * Math.random(), 0.2));
@@ -21,7 +25,6 @@ class PolygonImage {
                 this.genome.push(x + Math.random() - 0.5, y + Math.random() - 0.5);
             }
         }
-        this.draw(offscreenContext);
     }
 
     draw(ctx) {
@@ -46,7 +49,7 @@ class PolygonImage {
             ctx.closePath();
             ctx.fill();
         }
-        this.referenceData = ctx.getImageData(0,0, width, height);
+        this.imageData = ctx.getImageData(0,0, width, height);
     }
 }
 
@@ -66,7 +69,10 @@ function similarity(referenceData1, referenceData2) {
 function createPopulation(size) {
     let population = [];
     for (let i = 0; i < size; i++) {
-        population.push(new PolygonImage(referenceData.width, referenceData.height));
+        let image = new PolygonImage();
+        image.randomize();
+        image.draw(offscreenContext);
+        population.push(image);
     }
     return population;
 } 
@@ -80,7 +86,6 @@ function init() {
     let img = $("#reference")[0];
     let width = Math.round(img.width * 0.1);
     let height = Math.round(img.height *0.1);
-    console.log(width, height)
     offscreenCanvas = new OffscreenCanvas(width, height);
     offscreenContext = offscreenCanvas.getContext('2d');
     offscreenContext.drawImage(img, 0, 0, width, height);
@@ -228,11 +233,31 @@ function newGeneration() {
         genomes.push(offspring);
     }
 
-    for(let i = 0; i < population.length; i++) {
-        population[i].genome = genomes[i];
-        population[i].draw(offscreenContext);
+    if (population.length < instance.populationSize) {
+        population.forEach(function(image, idx) {
+            image.genome = [].concat(genomes[idx]);
+            image.draw(offscreenContext);
+        });
+
+        // add extra indiviuals to the population
+        for(let i = population.length; i < instance.populationSize; i++) {
+            let image = new PolygonImage();
+            image.genome = genomes[i];
+            image.draw(offscreenContext);
+            population.push(image);
+        }
     }
-    
+    else {
+        genomes.forEach(function(genome, idx) {
+            population[idx].genome = genome;
+            population[idx].draw(offscreenContext);
+        });
+
+        // remove the extra individuals
+        if (population.length > instance.populationSize) {
+            population.splice(instance.populationSize);
+        }
+    }
 }
 
 function iterate() {
@@ -243,7 +268,7 @@ function iterate() {
     let worst = population[0];
     let totalFitness = 0;
     for (let i = 0; i < population.length; i++) {
-        let fitness = similarity(referenceData, population[i].referenceData);
+        let fitness = similarity(referenceData, population[i].imageData);
         totalFitness += fitness;
         population[i].fitness = fitness;
         if (fitness > best.fitness) {
@@ -278,11 +303,10 @@ function applyConfig() {
     instance.mutationMethod = $("#mutation-method").val();
     instance.mutationRate = parseFloat($("#mutation-rate-slider").val());
     instance.elitism = $("#elitism").is(':checked');
-    console.log(instance);
 }
 
 $(document).ready(function() {
-    init();
+    $("#reference").on("load", init);
 });
 
 
