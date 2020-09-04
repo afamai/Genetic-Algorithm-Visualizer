@@ -64,6 +64,7 @@ class Ball {
         this.distanceToTarget = Infinity;
         this.done = false;
         this.hit = false;
+        this.fitness = 0;
     }
 
     // update
