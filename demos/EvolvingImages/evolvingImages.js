@@ -59,11 +59,15 @@ function similarity(referenceData1, referenceData2) {
     let data1 = referenceData1.data;
     let data2 = referenceData2.data;
     let ssq = 0;
+    let img1_ssq = 0;
+    let img2_ssq = 0;
     for (let i = 0; i < data1.length; i++) {
         ssq += (data1[i] - data2[i])**2;
+        img1_ssq += data1[i]**2;
+        img2_ssq += data2[i]**2;
     }
 
-    return 1 - ssq / (data1.length * 256 * 256);
+    return 1 - ssq / Math.sqrt(img1_ssq * img2_ssq);
 }
 
 function createPopulation(size) {
@@ -109,7 +113,7 @@ function init() {
         selectionMethod: "TOS",
         crossoverMethod: "UC",
         crossoverRate: 0.8,
-        mutationMethod: "uniformMutation",
+        mutationMethod: "gaussianMutation",
         mutationRate: 0.01,
         elitism: true,
         pause: true
