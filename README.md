@@ -2,6 +2,8 @@
 
 This application was built to showcase the genetic algorithm by using it in different scenarios. There are currently only 2 demos, but I do plan on building more in the future. I hope you enjoy playing around with the demos and watching the algorithm using the theory of natural evolution to find an optimal solution.
 
+Link to the app: https://afamai.github.io/Genetic-Algorithm-Visualizer/
+
 ## Smart Balls
 This program demonstrates the genetic algorithm through a simulation of bouncing balls built using Box2D. The goal of the program is the find the most optimal series of jumps required to reach the target.
 
